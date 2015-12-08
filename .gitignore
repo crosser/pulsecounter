@@ -1,0 +1,5 @@
+Em/
+*.o
+Pulsecounter-Prog.map
+Pulsecounter-Prog.out
+Schema-Imports/
