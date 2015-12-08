@@ -1,0 +1,18 @@
+version = "1.0.0";
+description = "Pulsecounter";
+
+schema Pulsecounter {
+
+    int32 event3 {
+        indicator
+    };
+
+    int32 event4 {
+        indicator
+    };
+
+    int32 event5 {
+        indicator
+    };
+
+};
