@@ -88,6 +88,8 @@
 #define TICK_HANDLER_ID        1
 #define DISPATCH_HANDLER_ID    2
 
+int32_t buttonCnt = 0;
+
 static void buttonHandler(void);
 static void postEvent(uint8_t handlerId);
 
@@ -325,6 +327,7 @@ static void postEvent(uint8_t handlerId) {
     #pragma vector=PORT1_VECTOR
 #endif
 INTERRUPT void buttonIsr(void) {
+    buttonCnt++;
     postEvent(BUTTON_HANDLER_ID);
     BUTTON_ENABLE();
     WAKEUP();

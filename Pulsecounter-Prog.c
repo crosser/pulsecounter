@@ -28,7 +28,7 @@ void Pulsecounter_disconnectHandler(void) {
 }
 
 void Pulsecounter_event3_fetch(Pulsecounter_event3_t* const output) {
-    *output = 3;
+    *output = buttonCnt;
 }
 
 void Pulsecounter_event4_fetch(Pulsecounter_event4_t* const output) {
