@@ -275,6 +275,11 @@ void Hal_tickStart(uint16_t msecs, Hal_Handler handler) {
     TA1CCTL0 = CCIE;                            // Enable the CCR0 interrupt
 }
 
+void Hal_tickStop(void) {
+    handlerTab[TICK_HANDLER_ID] = 0;
+    TA1CCR0 = 0;
+    TA1CCTL0 = 0;
+}
 
 /* -------- SRT-HAL INTERFACE -------- */
 

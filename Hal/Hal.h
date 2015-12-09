@@ -294,6 +294,7 @@ extern void Hal_redLedToggle(void);
  *
  **/
 extern void Hal_tickStart(uint16_t msecs, Hal_Handler Handler);
+extern void Hal_tickStop(void);
 
 #ifdef __cplusplus
 }

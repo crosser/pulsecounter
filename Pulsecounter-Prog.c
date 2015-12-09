@@ -2,30 +2,74 @@
 #include "Hal.h"
 
 static void buttonHandler(void);
+static void tickHandler(void);
+static bool connected = false;
 
 void main() {
     Hal_init();
     Hal_buttonEnable(buttonHandler);
+    Pulsecounter_setDeviceName("PULS-CNTR");
     Pulsecounter_start();
     Hal_idleLoop();
 }
 
 static void buttonHandler(void) {
-    Hal_greenLedOn();
-    Hal_redLedOn();
-    Hal_delay(500);
-    Hal_greenLedOff();
-    Hal_redLedOff();
-    Pulsecounter_event3_indicate();
+    uint8_t i;
+
+    if (connected)
+        Pulsecounter_event3_indicate();
+    else
+        Pulsecounter_accept(true);
+    for (i = 0; i < 3; i++) {
+        Hal_greenLedOn();
+        Hal_redLedOn();
+        Hal_delay(100);
+        Hal_greenLedOff();
+        Hal_redLedOff();
+    }
+    Hal_tickStart(5000, tickHandler);
+}
+
+static void tickHandler(void) {
+    uint8_t i;
+
+    Hal_tickStop();
+    if (connected)
+        return;
+    for (i = 0; i < 3; i++) {
+        Hal_greenLedOn();
+        Hal_delay(50);
+        Hal_redLedOn();
+        Hal_delay(50);
+        Hal_redLedOff();
+        Hal_delay(50);
+        Hal_greenLedOff();
+    }
+    Pulsecounter_accept(false);
 }
 
 /* -------- SCHEMA CALLBACKS -------- */
 
 void Pulsecounter_connectHandler(void) {
+    connected = true;
     Hal_connected();
+    Hal_redLedOn();
+    Hal_delay(100);
+    Hal_redLedOff();
+    Hal_greenLedOn();
+    Hal_delay(100);
+    Hal_greenLedOff();
 }
 
 void Pulsecounter_disconnectHandler(void) {
+    connected = false;
+    Hal_greenLedOn();
+    Hal_delay(100);
+    Hal_greenLedOff();
+    Hal_redLedOn();
+    Hal_delay(100);
+    Hal_redLedOff();
+    Hal_tickStart(5000, tickHandler);
     Hal_disconnected();
 }
 
