@@ -4,7 +4,6 @@
  * This example HAL is intentionally simple.  The implementation is limited to:
  *
  * BUTTON -- a single button that when pressed will cause an interrupt.
- * CONNECTED_LED -- an LED that is controlled inside the HAL to indicate connection to a central.
  * DEBUG -- two debug GPIOs that are available as outputs from the EAP and under user control.
  * DELAY -- a delay routine that can delay by n milliseconds.
  * INIT -- set the hardware up to its initial state
@@ -56,7 +55,6 @@ extern void Hal_buttonEnable(Hal_Handler handler);
  *
  * Called whenever the MCM peripheral connects to a central.
  *
- * Turns on the CONNECTED_LED to show connectivity to the central
  * Could do other things associated with connection to the central.
  *
  * Inputs:
@@ -64,9 +62,6 @@ extern void Hal_buttonEnable(Hal_Handler handler);
  *
  * Returns:
  *   None
- *
- * Side Effects:
- *   CONNECTED_LED on.
  *
  **/
 extern void Hal_connected(void);
@@ -151,7 +146,6 @@ extern void Hal_delay(uint16_t msecs);
  *
  * Called whenever the MCM peripheral disconnects from a central.
  *
- * Turns off the CONNECTED_LED to show lack of connectivity to the central
  * Could do other things associated with connection to the central.
  *
  * Inputs:
@@ -159,9 +153,6 @@ extern void Hal_delay(uint16_t msecs);
  *
  * Returns:
  *   None
- *
- * Side Effects:
- *   CONNECTED_LED off.
  *
  **/
 extern void Hal_disconnected(void);
@@ -228,7 +219,8 @@ extern void Hal_init(void);
  *   User LED off.
  *
  **/
-extern void Hal_ledOff(void);
+extern void Hal_greenLedOff(void);
+extern void Hal_redLedOff(void);
 /**
  * --------- Hal_ledOn ---------
  *
@@ -244,7 +236,8 @@ extern void Hal_ledOff(void);
  *   User LED on.
  *
  **/
-extern void Hal_ledOn(void);
+extern void Hal_greenLedOn(void);
+extern void Hal_redLedOn(void);
 /**
  * --------- Hal_ledRead ---------
  *
@@ -260,7 +253,8 @@ extern void Hal_ledOn(void);
  *   None
  *
  **/
-extern bool Hal_ledRead(void);
+extern bool Hal_greenLedRead(void);
+extern bool Hal_redLedRead(void);
 /**
  * --------- Hal_ledToggle ---------
  *
@@ -276,7 +270,8 @@ extern bool Hal_ledRead(void);
  *   User LED toggles state.
  *
  **/
-extern void Hal_ledToggle(void);
+extern void Hal_greenLedToggle(void);
+extern void Hal_redLedToggle(void);
 /**
  * --------- Hal_tickStart ---------
  *

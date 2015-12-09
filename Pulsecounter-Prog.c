@@ -11,9 +11,11 @@ void main() {
 }
 
 static void buttonHandler(void) {
-    Hal_ledOn();
+    Hal_greenLedOn();
+    Hal_redLedOn();
     Hal_delay(500);
-    Hal_ledOff();
+    Hal_greenLedOff();
+    Hal_redLedOff();
     Pulsecounter_event3_indicate();
 }
 

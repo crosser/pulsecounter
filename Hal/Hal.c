@@ -10,15 +10,17 @@
 
 /* -------- INTERNAL FEATURES -------- */
 
-#define LED_CONFIG()                (P1DIR |= BIT6)
-#define LED_ON()                    (P1OUT |= BIT6)
-#define LED_OFF()                   (P1OUT &= ~BIT6)
-#define LED_READ()                  (P1OUT & BIT6)
-#define LED_TOGGLE()                (P1OUT ^= BIT6)
+#define GREEN_LED_CONFIG()                (P1DIR |= BIT6)
+#define GREEN_LED_ON()                    (P1OUT |= BIT6)
+#define GREEN_LED_OFF()                   (P1OUT &= ~BIT6)
+#define GREEN_LED_READ()                  (P1OUT & BIT6)
+#define GREEN_LED_TOGGLE()                (P1OUT ^= BIT6)
 
-#define CONNECTED_LED_CONFIG()      (P1DIR |= BIT0)
-#define CONNECTED_LED_ON()          (P1OUT |= BIT0)
-#define CONNECTED_LED_OFF()         (P1OUT &= ~BIT0)
+#define RED_LED_CONFIG()                  (P1DIR |= BIT0)
+#define RED_LED_ON()                      (P1OUT |= BIT0)
+#define RED_LED_OFF()                     (P1OUT &= ~BIT0)
+#define RED_LED_READ()                    (P1OUT & BIT0)
+#define RED_LED_TOGGLE()                  (P1OUT ^= BIT0)
 
 #define BUTTON_CONFIG()             (P1DIR &= ~BIT3, P1REN |= BIT3, P1OUT |= BIT3, P1IES |= BIT3);
 #define BUTTON_ENABLE()             (P1IFG &= ~BIT3, P1IE |= BIT3)
@@ -110,7 +112,6 @@ void Hal_buttonEnable(Hal_Handler handler) {
 }
 
 void Hal_connected(void) {
-    CONNECTED_LED_ON();
 }
 
 void Hal_debugOn(uint8_t line) {
@@ -152,7 +153,6 @@ void Hal_delay(uint16_t msecs) {
 }
 
 void Hal_disconnected(void) {
-    CONNECTED_LED_OFF();
 }
 
 void Hal_init(void) {
@@ -171,10 +171,10 @@ void Hal_init(void) {
 
     /* setup LEDs */
 
-    LED_CONFIG();
-    LED_OFF();
-    CONNECTED_LED_CONFIG();
-    CONNECTED_LED_OFF();
+    GREEN_LED_CONFIG();
+    GREEN_LED_OFF();
+    RED_LED_CONFIG();
+    RED_LED_OFF();
 
     /* setup debug pins */
 
@@ -236,20 +236,36 @@ void Hal_idleLoop(void) {
     }
 }
 
-void Hal_ledOn(void) {
-    LED_ON();
+void Hal_greenLedOn(void) {
+    GREEN_LED_ON();
 }
 
-void Hal_ledOff(void) {
-    LED_OFF();
+void Hal_greenLedOff(void) {
+    GREEN_LED_OFF();
 }
 
-bool Hal_ledRead(void) {
-    return LED_READ();
+bool Hal_greenLedRead(void) {
+    return GREEN_LED_READ();
 }
 
-void Hal_ledToggle(void) {
-    LED_TOGGLE();
+void Hal_greenLedToggle(void) {
+    GREEN_LED_TOGGLE();
+}
+
+void Hal_redLedOn(void) {
+    RED_LED_ON();
+}
+
+void Hal_redLedOff(void) {
+    RED_LED_OFF();
+}
+
+bool Hal_redLedRead(void) {
+    return RED_LED_READ();
+}
+
+void Hal_redLedToggle(void) {
+    RED_LED_TOGGLE();
 }
 
 void Hal_tickStart(uint16_t msecs, Hal_Handler handler) {
