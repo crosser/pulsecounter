@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-typedef void (*Hal_Handler)(void);
+typedef void (*Hal_Handler)(uint8_t id);
 
 /**
  * --------- Hal_buttonEnable ---------
@@ -47,7 +47,7 @@ typedef void (*Hal_Handler)(void);
  *   BUTTON interrupt enabled
  *
  **/
-extern void Hal_buttonEnable(Hal_Handler handler);
+extern void Hal_buttonEnable(void (*handler)(void));
 /**
  * --------- Hal_connected ---------
  *

@@ -86,16 +86,18 @@
 #define WAKEUP()                    (__bic_SR_register_on_exit(LPM3_bits))
 #endif
 
-#define NUM_HANDLERS 3
+#define NUM_HANDLERS 5
 
 #define BUTTON_HANDLER_ID      0
-#define TICK_HANDLER_ID        1
-#define DISPATCH_HANDLER_ID    2
+#define EVENT4_HANDLER_ID      1
+#define EVENT5_HANDLER_ID      2
+#define TICK_HANDLER_ID        3
+#define DISPATCH_HANDLER_ID    4
 
-static void buttonHandler(void);
+static void buttonHandler(uint8_t id);
 static void postEvent(uint8_t handlerId);
 
-static Hal_Handler appButtonHandler;
+static void (*appButtonHandler)(void);
 static volatile uint16_t handlerEvents = 0;
 static uint16_t clockTick = 0;
 static Hal_Handler handlerTab[NUM_HANDLERS];
@@ -103,7 +105,7 @@ static Hal_Handler handlerTab[NUM_HANDLERS];
 
 /* -------- APP-HAL INTERFACE -------- */
 
-void Hal_buttonEnable(Hal_Handler handler) {
+void Hal_buttonEnable(void (*handler)(void)) {
     handlerTab[BUTTON_HANDLER_ID] = buttonHandler;
     appButtonHandler = handler;
     BUTTON_CONFIG();
@@ -226,7 +228,7 @@ void Hal_idleLoop(void) {
             uint8_t id;
             for (id = 0, mask = 0x1; id < NUM_HANDLERS; id++, mask <<= 1) {
                 if ((events & mask) && handlerTab[id]) {
-                    handlerTab[id]();
+                    handlerTab[id](id);
                 }
             }
         }
@@ -326,7 +328,7 @@ void Em_Hal_watchOn(void) {
 
 /* -------- INTERNAL FUNCTIONS -------- */
 
-static void buttonHandler(void) {
+static void buttonHandler(uint8_t id) {
     Hal_delay(BUTTON_DEBOUNCE_MSECS);
     if (BUTTON_PRESSED() && appButtonHandler) {
         appButtonHandler();
