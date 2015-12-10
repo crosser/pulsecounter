@@ -3,16 +3,20 @@ description = "Pulsecounter";
 
 schema Pulsecounter {
 
-    int32 event3 {
-        indicator
-    };
-
     int32 event4 {
         indicator
     };
 
     int32 event5 {
         indicator
+    };
+
+    int32 base4 {
+        readwrite
+    };
+
+    int32 base5 {
+        readwrite
     };
 
 };

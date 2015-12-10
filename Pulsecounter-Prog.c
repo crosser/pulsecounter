@@ -4,7 +4,12 @@
 static void buttonHandler(void);
 static void tickHandler(void);
 static bool connected = false;
-static int32_t buttonCnt = 0;
+static int32_t base4 = 0;
+static int32_t base5 = 1000;
+static int32_t event4 = 0;
+static int32_t event5 = 0;
+
+static bool cold = true;
 
 void main() {
     Hal_init();
@@ -17,9 +22,17 @@ void main() {
 static void buttonHandler(void) {
     uint8_t i;
 
-    buttonCnt++;
-    if (connected)
-        Pulsecounter_event3_indicate();
+    cold = !cold;
+    if (cold)
+        event4++;
+    else
+        event5++;
+    if (connected) {
+        if (cold)
+            Pulsecounter_event4_indicate();
+        else
+            Pulsecounter_event5_indicate();
+    }
     else
         Pulsecounter_accept(true);
     for (i = 0; i < 3; i++) {
@@ -75,14 +88,26 @@ void Pulsecounter_disconnectHandler(void) {
     Hal_disconnected();
 }
 
-void Pulsecounter_event3_fetch(Pulsecounter_event3_t* const output) {
-    *output = buttonCnt;
-}
-
 void Pulsecounter_event4_fetch(Pulsecounter_event4_t* const output) {
-    *output = 4;
+    *output = base4 + event4;
 }
 
 void Pulsecounter_event5_fetch(Pulsecounter_event5_t* const output) {
-    *output = 5;
+    *output = base5 + event5;
+}
+
+void Pulsecounter_base4_fetch(Pulsecounter_base4_t* const output) {
+    *output = base4;
+}
+
+void Pulsecounter_base4_store(Pulsecounter_base4_t* const input) {
+    base4 = *input - event4;
+}
+
+void Pulsecounter_base5_fetch(Pulsecounter_base5_t* const output) {
+    *output = base5;
+}
+
+void Pulsecounter_base5_store(Pulsecounter_base5_t* const input) {
+    base5 = *input - event5;
 }

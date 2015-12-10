@@ -43,6 +43,6 @@ $(APPNAME).o: Em/$(APPNAME).c
 Hal.o: Hal/Hal.c
 	$(CC) $< -o $@ $(CFLAGS)
 
-Em/$(APPNAME).c:
+Em/$(APPNAME).c: $(APPNAME).ems
 	$(EMBUILDER) -v $<
 
