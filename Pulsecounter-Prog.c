@@ -1,48 +1,61 @@
 #include "Pulsecounter.h"
 #include "Hal.h"
 
-static void buttonHandler(uint8_t id);
+static void gpioHandler(uint8_t id);
 static void tickHandler(void);
 static bool connected = false;
 static int32_t base4 = 0;
-static int32_t base5 = 1000;
+static int32_t base5 = 0;
 static int32_t event4 = 0;
 static int32_t event5 = 0;
 
-static bool cold = true;
-
 void main() {
     Hal_init();
-    Hal_buttonEnable(buttonHandler);
+    Hal_gpioEnable(gpioHandler);
     Pulsecounter_setDeviceName("PULS-CNTR");
     Pulsecounter_start();
     Hal_idleLoop();
 }
 
-static void buttonHandler(uint8_t id) {
+static void gpioHandler(uint8_t id) {
     uint8_t i;
 
-    cold = !cold;
-    if (cold)
-        event4++;
-    else
-        event5++;
-    if (connected) {
-        if (cold)
-            Pulsecounter_event4_indicate();
-        else
-            Pulsecounter_event5_indicate();
-    }
-    else
+    switch (id) {
+    case 0:
         Pulsecounter_accept(true);
-    for (i = 0; i < 3; i++) {
+            Hal_greenLedOn();
+            Hal_redLedOn();
+            Hal_delay(10);
+            Hal_greenLedOff();
+            Hal_redLedOff();
+        Hal_tickStart(5000, tickHandler);
+        break;
+    case 1:
+        event4++;
+        if (connected)
+            Pulsecounter_event4_indicate();
         Hal_greenLedOn();
-        Hal_redLedOn();
         Hal_delay(10);
         Hal_greenLedOff();
+        break;
+    case 2:
+        event5++;
+        if (connected)
+            Pulsecounter_event5_indicate();
+        Hal_redLedOn();
+        Hal_delay(10);
         Hal_redLedOff();
+        break;
+    default:
+        for (i = 0; i < 5; i++) {
+            Hal_greenLedOn();
+            Hal_redLedOn();
+            Hal_delay(10);
+            Hal_greenLedOff();
+            Hal_redLedOff();
+            Hal_delay(10);
+        }
     }
-    Hal_tickStart(5000, tickHandler);
 }
 
 static void tickHandler(void) {

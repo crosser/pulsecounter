@@ -22,12 +22,12 @@
 #define RED_LED_READ()                    (P1OUT & BIT0)
 #define RED_LED_TOGGLE()                  (P1OUT ^= BIT0)
 
-#define BUTTON_CONFIG()             (P1DIR &= ~BIT3, P1REN |= BIT3, P1OUT |= BIT3, P1IES |= BIT3);
-#define BUTTON_ENABLE()             (P1IFG &= ~BIT3, P1IE |= BIT3)
-#define BUTTON_DISABLE()            (P1IE &= ~BIT3, P1IFG &= ~BIT3)
-#define BUTTON_FIRED()              (P1IFG & BIT3)
-#define BUTTON_PRESSED()            (!(P1IN & BIT3))
-#define BUTTON_DEBOUNCE_MSECS       100
+#define GPIO_CONFIG(mask)           (P1DIR &= ~mask, P1REN |= mask, P1OUT |= mask, P1IES |= mask);
+#define GPIO_ENABLE(mask)           (P1IFG &= ~mask, P1IE |= mask)
+#define GPIO_DISABLE(mask)          (P1IE &= ~mask, P1IFG &= ~mask)
+#define GPIO_FIRED(mask)            (P1IFG & mask)
+#define GPIO_LOW(mask)              (!(P1IN & mask))
+#define GPIO_DEBOUNCE_MSECS         100
 
 #define DEBUG1_CONFIG()             (P2DIR |= BIT3)
 #define DEBUG1_ON()                 (P2OUT |= BIT3)
@@ -88,16 +88,16 @@
 
 #define NUM_HANDLERS 5
 
-#define BUTTON_HANDLER_ID      0
+#define EVENT3_HANDLER_ID      0
 #define EVENT4_HANDLER_ID      1
 #define EVENT5_HANDLER_ID      2
 #define TICK_HANDLER_ID        3
 #define DISPATCH_HANDLER_ID    4
 
-static void buttonHandler(uint8_t id);
+static void gpioHandler(uint8_t id);
 static void postEvent(uint8_t handlerId);
 
-static Hal_Handler appButtonHandler;
+static Hal_Handler appGpioHandler;
 static volatile uint16_t handlerEvents = 0;
 static uint16_t clockTick = 0;
 static Hal_Handler handlerTab[NUM_HANDLERS];
@@ -105,12 +105,17 @@ static Hal_Handler handlerTab[NUM_HANDLERS];
 
 /* -------- APP-HAL INTERFACE -------- */
 
-void Hal_buttonEnable(Hal_Handler handler) {
-    handlerTab[BUTTON_HANDLER_ID] = buttonHandler;
-    appButtonHandler = handler;
-    BUTTON_CONFIG();
-    Hal_delay(100);
-    BUTTON_ENABLE();
+void Hal_gpioEnable(Hal_Handler handler) {
+    uint8_t id;
+    uint16_t mask;
+
+    for (id = 0, mask = BIT3; id < 3; id++, mask <<= 1) {
+        handlerTab[id] = gpioHandler;
+        appGpioHandler = handler;
+        (P1DIR &= ~mask, P1REN |= mask, P1OUT |= mask, P1IES |= mask);
+        Hal_delay(100);
+        (P1IFG &= ~mask, P1IE |= mask);
+    }
 }
 
 void Hal_connected(void) {
@@ -328,12 +333,13 @@ void Em_Hal_watchOn(void) {
 
 /* -------- INTERNAL FUNCTIONS -------- */
 
-static void buttonHandler(uint8_t id) {
-    Hal_delay(BUTTON_DEBOUNCE_MSECS);
-    if (BUTTON_PRESSED() && appButtonHandler) {
-        appButtonHandler(id);
-    }
-    BUTTON_ENABLE();
+static void gpioHandler(uint8_t id) {
+    uint16_t mask = BIT3 << id;
+
+    Hal_delay(GPIO_DEBOUNCE_MSECS);
+    if (GPIO_LOW(mask) && appGpioHandler)
+        appGpioHandler(id);
+    GPIO_ENABLE(mask);
 }
 
 static void postEvent(uint8_t handlerId) {
@@ -350,10 +356,15 @@ static void postEvent(uint8_t handlerId) {
 #ifdef __TI_COMPILER_VERSION__
     #pragma vector=PORT1_VECTOR
 #endif
-INTERRUPT void buttonIsr(void) {
-    if (BUTTON_FIRED())
-        postEvent(BUTTON_HANDLER_ID);
-    BUTTON_DISABLE();
+INTERRUPT void gpioIsr(void) {
+    uint8_t id;
+    uint16_t mask;
+
+    for (id = 0, mask = BIT3; id < 3; id++, mask <<= 1)
+        if (GPIO_FIRED(mask)) {
+            postEvent(id);
+            GPIO_DISABLE(mask);
+        }
     WAKEUP();
 }
 

@@ -47,7 +47,7 @@ typedef void (*Hal_Handler)(uint8_t id);
  *   BUTTON interrupt enabled
  *
  **/
-extern void Hal_buttonEnable(Hal_Handler handler);
+extern void Hal_gpioEnable(Hal_Handler handler);
 /**
  * --------- Hal_connected ---------
  *
