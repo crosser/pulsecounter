@@ -1,7 +1,7 @@
 #include "Pulsecounter.h"
 #include "Hal.h"
 
-static void buttonHandler(void);
+static void buttonHandler(uint8_t id);
 static void tickHandler(void);
 static bool connected = false;
 static int32_t base4 = 0;
@@ -19,7 +19,7 @@ void main() {
     Hal_idleLoop();
 }
 
-static void buttonHandler(void) {
+static void buttonHandler(uint8_t id) {
     uint8_t i;
 
     cold = !cold;

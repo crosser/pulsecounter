@@ -97,7 +97,7 @@
 static void buttonHandler(uint8_t id);
 static void postEvent(uint8_t handlerId);
 
-static void (*appButtonHandler)(void);
+static Hal_Handler appButtonHandler;
 static volatile uint16_t handlerEvents = 0;
 static uint16_t clockTick = 0;
 static Hal_Handler handlerTab[NUM_HANDLERS];
@@ -105,7 +105,7 @@ static Hal_Handler handlerTab[NUM_HANDLERS];
 
 /* -------- APP-HAL INTERFACE -------- */
 
-void Hal_buttonEnable(void (*handler)(void)) {
+void Hal_buttonEnable(Hal_Handler handler) {
     handlerTab[BUTTON_HANDLER_ID] = buttonHandler;
     appButtonHandler = handler;
     BUTTON_CONFIG();
@@ -331,7 +331,7 @@ void Em_Hal_watchOn(void) {
 static void buttonHandler(uint8_t id) {
     Hal_delay(BUTTON_DEBOUNCE_MSECS);
     if (BUTTON_PRESSED() && appButtonHandler) {
-        appButtonHandler();
+        appButtonHandler(id);
     }
     BUTTON_ENABLE();
 }
