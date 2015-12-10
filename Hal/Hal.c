@@ -24,6 +24,8 @@
 
 #define BUTTON_CONFIG()             (P1DIR &= ~BIT3, P1REN |= BIT3, P1OUT |= BIT3, P1IES |= BIT3);
 #define BUTTON_ENABLE()             (P1IFG &= ~BIT3, P1IE |= BIT3)
+#define BUTTON_DISABLE()            (P1IE &= ~BIT3, P1IFG &= ~BIT3)
+#define BUTTON_FIRED()              (P1IFG & BIT3)
 #define BUTTON_PRESSED()            (!(P1IN & BIT3))
 #define BUTTON_DEBOUNCE_MSECS       100
 
@@ -89,8 +91,6 @@
 #define BUTTON_HANDLER_ID      0
 #define TICK_HANDLER_ID        1
 #define DISPATCH_HANDLER_ID    2
-
-int32_t buttonCnt = 0;
 
 static void buttonHandler(void);
 static void postEvent(uint8_t handlerId);
@@ -327,10 +327,11 @@ void Em_Hal_watchOn(void) {
 /* -------- INTERNAL FUNCTIONS -------- */
 
 static void buttonHandler(void) {
-    Hal_delay(100);
+    Hal_delay(BUTTON_DEBOUNCE_MSECS);
     if (BUTTON_PRESSED() && appButtonHandler) {
         appButtonHandler();
     }
+    BUTTON_ENABLE();
 }
 
 static void postEvent(uint8_t handlerId) {
@@ -348,9 +349,9 @@ static void postEvent(uint8_t handlerId) {
     #pragma vector=PORT1_VECTOR
 #endif
 INTERRUPT void buttonIsr(void) {
-    buttonCnt++;
-    postEvent(BUTTON_HANDLER_ID);
-    BUTTON_ENABLE();
+    if (BUTTON_FIRED())
+        postEvent(BUTTON_HANDLER_ID);
+    BUTTON_DISABLE();
     WAKEUP();
 }
 

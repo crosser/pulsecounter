@@ -4,6 +4,7 @@
 static void buttonHandler(void);
 static void tickHandler(void);
 static bool connected = false;
+static int32_t buttonCnt = 0;
 
 void main() {
     Hal_init();
@@ -16,6 +17,7 @@ void main() {
 static void buttonHandler(void) {
     uint8_t i;
 
+    buttonCnt++;
     if (connected)
         Pulsecounter_event3_indicate();
     else
@@ -23,7 +25,7 @@ static void buttonHandler(void) {
     for (i = 0; i < 3; i++) {
         Hal_greenLedOn();
         Hal_redLedOn();
-        Hal_delay(100);
+        Hal_delay(10);
         Hal_greenLedOff();
         Hal_redLedOff();
     }

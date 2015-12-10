@@ -26,8 +26,6 @@
 extern "C" {
 #endif
 
-extern int32_t buttonCnt;
-
 typedef void (*Hal_Handler)(void);
 
 /**
