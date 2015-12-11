@@ -28,7 +28,7 @@ static void gpioHandler(uint8_t id) {
             Hal_delay(10);
             Hal_greenLedOff();
             Hal_redLedOff();
-        Hal_tickStart(5000, tickHandler);
+        Hal_tickStart(15000, tickHandler);
         break;
     case 1:
         event4++;
@@ -97,7 +97,7 @@ void Pulsecounter_disconnectHandler(void) {
     Hal_redLedOn();
     Hal_delay(100);
     Hal_redLedOff();
-    Hal_tickStart(5000, tickHandler);
+    Hal_tickStart(15000, tickHandler);
     Hal_disconnected();
 }
 

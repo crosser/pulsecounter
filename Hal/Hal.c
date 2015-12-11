@@ -64,7 +64,7 @@
 #define EAP_TX_INT_ENABLE()         (IE2 |= UCA0TXIE)
 
 #define MCLK_TICKS_PER_MS           1000L
-#define ACLK_TICKS_PER_SECOND       12000L
+#define ACLK_TICKS_PER_SECOND       1500L /* was 12000L with divider /1 */
 #define UART_WATCHDOG_PERIOD        (ACLK_TICKS_PER_SECOND * 250) / 1000
 
 #define UART_WATCH_DISABLE()        (TA1CCTL1 = 0)                                              // Turn off CCR1 Interrupt
@@ -167,13 +167,21 @@ void Hal_init(void) {
     /* setup clocks */
 
     WDTCTL = WDTPW + WDTHOLD;
+    /* MCLK = DCOCLK */
+    /* MCLK divider = /1 */
+    /* SMCLK divider = /1 */
     BCSCTL2 = SELM_0 + DIVM_0 + DIVS_0;
     if (CALBC1_1MHZ != 0xFF) {
         DCOCTL = 0x00;
         BCSCTL1 = CALBC1_1MHZ;      /* Set DCO to 1MHz */
         DCOCTL = CALDCO_1MHZ;
     }
-    BCSCTL1 |= XT2OFF + DIVA_0;
+    /* XT2 is off (Not used for MCLK/SMCLK) */
+    /* ACLK divider = /8 */
+    BCSCTL1 |= XT2OFF + DIVA_3;
+    /* XT2 range = 0.4 - 1 MHz */
+    /* LFXT1 range/VLO = VLOCLK (or 3-16 MHz if XTS=1) */
+    /* Capacitor 6 pF */
     BCSCTL3 = XT2S_0 + LFXT1S_2 + XCAP_1;
 
     /* setup LEDs */
