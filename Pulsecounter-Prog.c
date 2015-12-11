@@ -4,10 +4,8 @@
 static void gpioHandler(uint8_t id);
 static void tickHandler(void);
 static bool connected = false;
-static int32_t base4 = 0;
-static int32_t base5 = 0;
-static int32_t event4 = 0;
-static int32_t event5 = 0;
+static int32_t cold = 0;
+static int32_t hot  = 0;
 
 void main() {
     Hal_init();
@@ -31,17 +29,17 @@ static void gpioHandler(uint8_t id) {
         Hal_tickStart(15000, tickHandler);
         break;
     case 1:
-        event4++;
+        cold++;
         if (connected)
-            Pulsecounter_event4_indicate();
+            Pulsecounter_coldTick_indicate();
         Hal_greenLedOn();
         Hal_delay(10);
         Hal_greenLedOff();
         break;
     case 2:
-        event5++;
+        hot++;
         if (connected)
-            Pulsecounter_event5_indicate();
+            Pulsecounter_hotTick_indicate();
         Hal_redLedOn();
         Hal_delay(10);
         Hal_redLedOff();
@@ -101,26 +99,18 @@ void Pulsecounter_disconnectHandler(void) {
     Hal_disconnected();
 }
 
-void Pulsecounter_event4_fetch(Pulsecounter_event4_t* const output) {
-    *output = base4 + event4;
+void Pulsecounter_coldTick_fetch(Pulsecounter_coldTick_t* const output) {
+    *output = cold;
 }
 
-void Pulsecounter_event5_fetch(Pulsecounter_event5_t* const output) {
-    *output = base5 + event5;
+void Pulsecounter_hotTick_fetch(Pulsecounter_hotTick_t* const output) {
+    *output = hot;
 }
 
-void Pulsecounter_base4_fetch(Pulsecounter_base4_t* const output) {
-    *output = base4;
+void Pulsecounter_coldSet_store(Pulsecounter_coldSet_t* const input) {
+    cold = *input;
 }
 
-void Pulsecounter_base4_store(Pulsecounter_base4_t* const input) {
-    base4 = *input - event4;
-}
-
-void Pulsecounter_base5_fetch(Pulsecounter_base5_t* const output) {
-    *output = base5;
-}
-
-void Pulsecounter_base5_store(Pulsecounter_base5_t* const input) {
-    base5 = *input - event5;
+void Pulsecounter_hotSet_store(Pulsecounter_hotSet_t* const input) {
+    hot = *input;
 }
