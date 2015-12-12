@@ -25,6 +25,7 @@ static void gpioHandler(uint8_t id) {
         updatable = true;
         if (connected) {
             Pulsecounter_coldTick_indicate();
+            Hal_delay(100);
             Pulsecounter_hotTick_indicate();
         }
         Hal_greenLedOn();
@@ -117,11 +118,25 @@ void Pulsecounter_hotTick_fetch(Pulsecounter_hotTick_t* const output) {
 }
 
 void Pulsecounter_coldSet_store(Pulsecounter_coldSet_t* const input) {
-    if (updatable)
+    Hal_greenLedOn();
+    Hal_delay(100);
+    Hal_greenLedOff();
+    Hal_delay(100);
+    Hal_greenLedOn();
+    Hal_delay(100);
+    Hal_greenLedOff();
+    // if (updatable)
         cold = *input;
 }
 
 void Pulsecounter_hotSet_store(Pulsecounter_hotSet_t* const input) {
-    if (updatable)
+    Hal_redLedOn();
+    Hal_delay(100);
+    Hal_redLedOff();
+    Hal_delay(100);
+    Hal_redLedOn();
+    Hal_delay(100);
+    Hal_redLedOff();
+    // if (updatable)
         hot = *input;
 }
