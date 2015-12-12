@@ -1,4 +1,4 @@
-Anaren boosterpach with Emmoco firmware looks like this over BLE:
+Anaren boosterpack with Emmoco firmware looks like this over BLE:
 
 [BC:6A:29:AB:2E:31][LE]> primary
 attr handle: 0x0001, end grp handle: 0x000b uuid: 00001800-0000-1000-8000-00805f9b34fb
@@ -107,4 +107,95 @@ handle: 0x0018, uuid: 0000ffe3-0000-1000-8000-00805f9b34fb
 handle: 0x0019, uuid: 00002803-0000-1000-8000-00805f9b34fb	+ GATT Characteristic Declaration
 handle: 0x001a, uuid: 0000ffe4-0000-1000-8000-00805f9b34fb
 
+========================================================================
+
+After some playing around, the role of the attributes looks like this:
+
+ffe1 [R,I]: Data read
+	Receives Indicate messages containing variable id in
+	the first byte, zero in second byte, variable value
+	in the rest. Maybe variable id is two-byte (LE).
+
+ffe2[R,I]: Operation completion code
+	After some writes, esp. into uuid ffe3, this characteristic
+	gets Indicate 32bit long, all zeroes, or with non-zero first
+	byte. Observed 0x07 and 0x33. Looks like return code from the
+	operation initiated by write into ffe3.
+
+ffe3[W]: Command(?)
+	Write of any length, with the first byte 1 or 2 results in
+	Indicate message on ffe2.
+
+ffe4[W]: Data write(?)
+	Write seems to affect the Indicate code that arrives in response
+	to subsequent writes to ffe3.
+
+======================================================================
+
+Hypothesis: command may have similar format to the Em_Message that is
+used to communicate between the MCM and EDR.
+
+#define Em_Message_INDSIZE 4
+typedef uint8_t Em_Message_Size;
+typedef uint8_t Em_Message_Kind;
+typedef uint8_t Em_Message_ResId;
+typedef uint8_t Em_Message_Chan;
+ 
+#define Em_Message_NOP 0
+#define Em_Message_FETCH 1
+#define Em_Message_FETCH_DONE 2
+#define Em_Message_STORE 3
+#define Em_Message_STORE_DONE 4
+#define Em_Message_INDICATOR 5
+#define Em_Message_CONNECT 6
+#define Em_Message_DISCONNECT 7
+#define Em_Message_ECHO 8
+#define Em_Message_PAIRING 9
+#define Em_Message_PAIRING_DONE 10
+#define Em_Message_OFFLINE 11
+#define Em_Message_ACCEPT 12
+#define Em_Message_START 13
+#define Em_Message_ACTIVE_PARAMS 14
+
+typedef struct Em_Message_Header {
+    uint8_t size;
+    uint8_t kind;
+    uint8_t resId;
+    uint8_t chan;
+} Em_Message_Header;
+
+typedef struct Em_App_Message {
+    uint8_t dummy[3];
+    uint8_t sot;
+    struct Em_Message_Header {
+        uint8_t size;
+        uint8_t kind;
+        uint8_t resId;
+        uint8_t chan;
+    } hdr;
+    uint8_t data[20]; /* 4 for Indicator */
+} Em_App_Message;
+
+Write ffe3	Ind ffe2
+FF		-
+FE		0D 00				protocolLevel
+FD		0D 00				protocolLevel
+FC		42 20 79 91 51 01 00 00		Build
+FB		-
+FA		bc d0 b8 ea f0 13 c8 32 0b 21 07 09 c0 5c 43 48 0d 00 11 00
+F9		04 09
+F8		-
+F7		-
+F6		00
+F5		50 55 4c 53 2d 43 4e 54 52
+
+00		-
+01		00 00 00 53	- byte changes after reset (EA)
+02		00 00 00 53
+
+After write to ffe4 write to ffe3 stops producing results
+
+Hypothesis about a match between Em messagas and wire messages was wrong
+
+=============================================
 
