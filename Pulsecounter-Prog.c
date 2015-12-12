@@ -85,6 +85,7 @@ static void tickHandler(void) {
 
 void Pulsecounter_connectHandler(void) {
     connected = true;
+    Hal_tickStop();
     Hal_connected();
     Hal_redLedOn();
     Hal_delay(100);
