@@ -1,0 +1,59 @@
+Given that it is not going to be possible to write data to the sensor MCU,
+we would need the database structure allowing for flexible adjustment of
+the "initial value" of the counters.
+
+1. As a new value for a counter arrives, if the new value is less than
+the prevously recorded one, we automatically make an adjustment to make
+the value continue to grow.
+
+2. At some later time, we may need to change the adjustment value if some
+pulses where lost.
+
+3. There should be a way to introduce an adjustment for specified value
+at specified time (optional).
+
+4. Count events should be recorded "as is", to allow future changes of
+processing procedure.
+
+5. Database design should be optimised to a query that returns a set of
+(corrected) values of the counter with the times of measurement, limited
+by the interval of time.
+
+6. Another (less frequent) query will be for the last recorded (corrected)
+value of the counter with the time of measurement.
+
+create table adjustment (timestamp datetime, value int);
+create table counter    (timestamp datetime, value int);
+
+insert into adjustment values (datetime('now'), 10);
+insert into counter values (datetime('now'), 5);
+insert into counter values (datetime('now'), 10);
+insert into counter values (datetime('now'), 15);
+insert into adjustment values (datetime('now'), 30);
+insert into counter values (datetime('now'), 0);
+insert into counter values (datetime('now'), 5);
+insert into counter values (datetime('now'), 10);
+
+select timestamp, value+adj as value from
+  (select c.timestamp timestamp, c.value value, 
+		(select value from adjustment a
+			where a.timestamp <= c.timestamp
+			order by timestamp desc limit 1) adj from counter c
+  ) t;
+
+
+sqlite: "SQL error: no such column: c.timestamp"
+
+mysql:
++---------------------+-------+
+| timestamp           | value |
++---------------------+-------+
+| 2015-12-14 19:16:27 |    15 |
+| 2015-12-14 19:16:31 |    20 |
+| 2015-12-14 19:16:35 |    25 |
+| 2015-12-14 19:16:44 |    30 |
+| 2015-12-14 19:16:48 |    35 |
+| 2015-12-14 19:16:51 |    40 |
++---------------------+-------+
+6 rows in set (0.00 sec)
+
