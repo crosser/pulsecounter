@@ -199,3 +199,9 @@ Hypothesis about a match between Em messagas and wire messages was wrong
 
 =============================================
 
+Other hardware that looks more promising:
+
+NUCLEO-L053R8 (STM32L053R8T6)
+http://www.st.com/web/en/catalog/tools/FM116/SC959/SS1532/LN1847/PF260001
+X-NUCLEO-IDB05A1 (SPBTLE-RF)
+http://www.st.com/web/catalog/tools/FM146/CL2167/SC2006/LN1988/PF262191
