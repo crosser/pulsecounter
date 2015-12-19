@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <time.h>
+#include <syslog.h>
 
 #include <glib.h>
 
@@ -52,6 +53,26 @@ static GOptionEntry options[] = {
 		"Specify file name with database configuration", "cfile"},
 	{ NULL },
 };
+
+void local_log_handler(const gchar *log_domain, GLogLevelFlags log_level,
+			const gchar *message, gpointer log_context)
+{
+	int syslog_level;
+
+	switch (log_level) {
+	case G_LOG_LEVEL_CRITICAL:	syslog_level = LOG_CRIT;	break;
+	case G_LOG_LEVEL_ERROR:		syslog_level = LOG_ERR;		break;
+	case G_LOG_LEVEL_WARNING:	syslog_level = LOG_WARNING;	break;
+	case G_LOG_LEVEL_MESSAGE:	syslog_level = LOG_NOTICE;	break;
+	case G_LOG_LEVEL_INFO:		syslog_level = LOG_INFO;	break;
+	case G_LOG_LEVEL_DEBUG:		syslog_level = LOG_DEBUG;	break;
+	default:			syslog_level = LOG_INFO;
+	}
+	if (!log_domain || (log_domain[0] == '\0'))
+		syslog(syslog_level, "%s", message);
+	else
+		syslog(syslog_level, "%s: %s", log_domain, message);
+}
 
 static gboolean channel_watcher(GIOChannel *chan, GIOCondition cond,
 				gpointer user_data)
@@ -132,7 +153,7 @@ int main(int argc, char *argv[])
 	gboolean got_error = FALSE;
 
 	g_log_set_handler(NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
-			  | G_LOG_FLAG_RECURSION, g_log_default_handler, NULL);
+			  | G_LOG_FLAG_RECURSION, local_log_handler, NULL);
 	opt_dst_type = g_strdup("public");
 	opt_sec_level = g_strdup("low");
 	opt_dbconffile = g_strdup("/etc/pulsecounter.db");

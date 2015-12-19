@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include <glib.h>
+
 #include <mysql/mysql.h>
 
 #include "dbstore.h"
@@ -74,8 +76,7 @@ int dbstore(uint8_t which, uint32_t val)
 	(void)strftime(tstr, sizeof(tstr), "%Y-%m-%d %H:%M:%S", &tm);
 	mysql_init(&mysql);
 	if(!mysql_real_connect(&mysql, host, user, pass, dbnm, 0, NULL, 0)) {
-		fprintf(stderr, "mysql connect error: %s\n",
-			mysql_error(&mysql));
+		g_warning("mysql connect error: %s\n", mysql_error(&mysql));
 		return 1;
 	}
 	snprintf(statement, sizeof(statement),
@@ -83,8 +84,8 @@ int dbstore(uint8_t which, uint32_t val)
 		 table, tstr, val);
 	rc = mysql_query(&mysql, statement);
 	if (rc)
-		fprintf(stderr, "mysql insert \"%s\" error: %s\n",
-			statement, mysql_error(&mysql));
+		g_warning("mysql insert \"%s\" error: %s\n",
+				statement, mysql_error(&mysql));
 	mysql_close(&mysql);
 	return rc;
 }
