@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
 #include <ctype.h>
@@ -68,8 +69,10 @@ int dbstore(uint8_t which, uint32_t val)
 	struct tm tm;
 	char buf[64];
 	char tstr[32];
-	char *table = (which == 1) ? "coldcnt" : "hotcnt";
+	char *table = (which == 1) ? "cold" : "hot";
 	char statement[64];
+	MYSQL_RES *result;
+	uint32_t prev_val = 0;
 
 	t = time(NULL);
 	(void)gmtime_r(&t, &tm);
@@ -79,13 +82,40 @@ int dbstore(uint8_t which, uint32_t val)
 		g_warning("mysql connect error: %s\n", mysql_error(&mysql));
 		return 1;
 	}
+	mysql_autocommit(&mysql, FALSE);
+	/* ======== */
 	snprintf(statement, sizeof(statement),
-		 "insert into %s values (\"%s\",%u);\n",
-		 table, tstr, val);
-	rc = mysql_query(&mysql, statement);
-	if (rc)
-		g_warning("mysql insert \"%s\" error: %s\n",
+		 "select value from %scnt order by timestamp desc limit 1;\n",
+		 table);
+	if ((rc = mysql_query(&mysql, statement)))
+		g_warning("mysql \"%s\" error: %s\n",
 				statement, mysql_error(&mysql));
+	else if ((result = mysql_store_result(&mysql))){
+		MYSQL_ROW row = mysql_fetch_row(result);
+		if (row && *row) prev_val = atoi(*row);
+		mysql_free_result(result);
+	}
+	if (val <= prev_val) {
+		snprintf(statement, sizeof(statement),
+			 "insert into %sadj values (\"%s\",%u);\n",
+			 table, tstr, prev_val);
+		g_info("%s %u <= %u, %s", table, val, prev_val, statement);
+		if ((rc = mysql_query(&mysql, statement)))
+			g_warning("mysql \"%s\" error: %s\n",
+					statement, mysql_error(&mysql));
+	}
+	snprintf(statement, sizeof(statement),
+		 "insert into %scnt values (\"%s\",%u);\n",
+		 table, tstr, val);
+	if ((rc = mysql_query(&mysql, statement)))
+		g_warning("mysql \"%s\" error: %s\n",
+				statement, mysql_error(&mysql));
+	/* ======== */
+	if (!rc) {
+		if ((rc = mysql_commit(&mysql)))
+			g_warning("mysql commit error: %s\n",
+					mysql_error(&mysql));
+	}
 	mysql_close(&mysql);
 	return rc;
 }
