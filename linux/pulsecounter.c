@@ -31,6 +31,7 @@ static char *opt_dst_type = NULL;
 static int opt_mtu = 0;
 static int opt_psm = 0;
 static char *opt_sec_level = NULL;
+static char *opt_dbconffile = NULL;
 
 static GMainLoop *event_loop;
 
@@ -47,6 +48,8 @@ static GOptionEntry options[] = {
 		"Specify the PSM for GATT/ATT over BR/EDR", "PSM" },
 	{ "sec-level", 'l', 0, G_OPTION_ARG_STRING, &opt_sec_level,
 		"Set security level. Default: low", "[low | medium | high]"},
+	{ "dbconfig", 'c', 0, G_OPTION_ARG_STRING, &opt_dbconffile,
+		"Specify file name with database configuration", "cfile"},
 	{ NULL },
 };
 
@@ -132,11 +135,22 @@ int main(int argc, char *argv[])
 			  | G_LOG_FLAG_RECURSION, g_log_default_handler, NULL);
 	opt_dst_type = g_strdup("public");
 	opt_sec_level = g_strdup("low");
+	opt_dbconffile = g_strdup("/etc/pulsecounter.db");
 	context = g_option_context_new(NULL);
 	g_option_context_add_main_entries(context, options, NULL);
 	if (!g_option_context_parse(context, &argc, &argv, &gerr)) {
 		g_error("%s", gerr->message);
 		g_clear_error(&gerr);
+		got_error = TRUE;
+		goto done;
+	}
+	if (!opt_dst) {
+		g_error("Destination MAC address must be specified");
+		got_error = TRUE;
+		goto done;
+	}
+	if (dbconfig(opt_dbconffile)) {
+		g_error("Could not parse database configuration file");
 		got_error = TRUE;
 		goto done;
 	}
@@ -161,6 +175,7 @@ done:
 	g_free(opt_src);
 	g_free(opt_dst);
 	g_free(opt_sec_level);
+	g_free(opt_dbconffile);
 	if (got_error)
 		exit(EXIT_FAILURE);
 	else
