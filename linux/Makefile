@@ -5,7 +5,11 @@ LDLIBS = $(BLUEZ)/lib/.libs/libbluetooth-internal.a \
 
 all: pulsecounter
 
-pulsecounter: pulsecounter.o \
+pulsecounter.o: pulsecounter.c dbstore.h
+
+dbstore.o: dbstore.c dbstore.h
+
+pulsecounter: pulsecounter.o dbstore.o \
 	$(BLUEZ)/attrib/att.o $(BLUEZ)/attrib/gatt.o \
 	$(BLUEZ)/attrib/gattrib.o $(BLUEZ)/btio/btio.o \
 	$(BLUEZ)/attrib/utils.o $(BLUEZ)/src/log.o

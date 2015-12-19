@@ -18,6 +18,8 @@
 #include "attrib/gattrib.h"
 #include "attrib/gatt.h"
 
+#include "dbstore.h"
+
 GIOChannel *gatt_connect(const char *src, const char *dst,
 			const char *dst_type, const char *sec_level,
 			int psm, int mtu, BtIOConnect connect_cb,
@@ -54,7 +56,7 @@ static gboolean channel_watcher(GIOChannel *chan, GIOCondition cond,
 	g_io_channel_shutdown(chan, FALSE, NULL);
 	g_io_channel_unref(chan);
 	g_main_loop_quit(event_loop);
-	g_print("channel_watcher cleared channel and exiting\n");
+	g_info("channel_watcher cleared channel and exiting");
 	return FALSE;
 }
 
@@ -62,20 +64,32 @@ static void events_handler(const uint8_t *pdu, uint16_t len, gpointer user_data)
 {
 	GAttrib *attrib = user_data;
 	uint8_t *opdu;
-	uint16_t handle, i, olen = 0;
-	size_t plen;
-	time_t t;
-	struct tm tm;
-	char tstr[64];
+	uint8_t which;
+	uint16_t handle;
 
-	t = time(NULL);
-	(void)gmtime_r(&t, &tm);
-	(void)strftime(tstr, sizeof(tstr), "%Y-%m-%d %H:%M:%S", &tm);
 	handle = bt_get_le16(&pdu[1]);
-	g_print("%s ev %02x hd 0x%04x value: ", tstr, pdu[0], handle);
-	for (i = 3; i < len; i++)
-		g_print("%02x ", pdu[i]);
-	g_print("\n");
+	which = pdu[3];
+	if ((pdu[0] == 0x1b) && (handle == 0x0012) && (len == 9) &&
+	    ((which == 1) || (which == 2))) {
+		uint32_t val = bt_get_le32(&pdu[5]);
+		g_debug("store: \"%hhu,%u\"\n", which, val);
+		if (dbstore(which, val))
+			g_warning("error storing \"%hhu,%u\"\n", which, val);
+	} else {
+		time_t t;
+		int i;
+		struct tm tm;
+		char buf[64];
+		char tstr[64];
+
+		t = time(NULL);
+		(void)gmtime_r(&t, &tm);
+		(void)strftime(tstr, sizeof(tstr), "%Y-%m-%d %H:%M:%S", &tm);
+		for (i = 3; (i < len) && ((i-3) < (sizeof(buf)/3)); i++)
+			sprintf(buf+strlen(buf), " %02x ", pdu[i]);
+		g_warning("%s ev %02x hd 0x%04x value: %s",
+			tstr, pdu[0], handle, buf);
+	}
 }
 
 static void connect_cb(GIOChannel *io, GError *err, gpointer user_data)
@@ -86,13 +100,13 @@ static void connect_cb(GIOChannel *io, GError *err, gpointer user_data)
 	GError *gerr = NULL;
 
 	if (err) {
-		g_printerr("%s\n", err->message);
+		g_warning("%s", err->message);
 		g_main_loop_quit(event_loop);
 	}
 	bt_io_get(io, &gerr, BT_IO_OPT_IMTU, &mtu,
 				BT_IO_OPT_CID, &cid, BT_IO_OPT_INVALID);
 	if (gerr) {
-		g_printerr("Can't detect MTU, using default: %s",
+		g_warning("Can't detect MTU, using default: %s",
 							gerr->message);
 		g_error_free(gerr);
 		mtu = ATT_DEFAULT_LE_MTU;
@@ -104,7 +118,7 @@ static void connect_cb(GIOChannel *io, GError *err, gpointer user_data)
 						events_handler, attrib, NULL);
 	g_attrib_register(attrib, ATT_OP_HANDLE_IND, GATTRIB_ALL_HANDLES,
 						events_handler, attrib, NULL);
-	g_print("connect_cb registered events_handler and exiting\n");
+	g_info("connect_cb registered events_handler and exiting\n");
 }
 
 int main(int argc, char *argv[])
@@ -114,30 +128,33 @@ int main(int argc, char *argv[])
 	GIOChannel *chan;
 	gboolean got_error = FALSE;
 
+	g_log_set_handler(NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
+			  | G_LOG_FLAG_RECURSION, g_log_default_handler, NULL);
 	opt_dst_type = g_strdup("public");
 	opt_sec_level = g_strdup("low");
 	context = g_option_context_new(NULL);
 	g_option_context_add_main_entries(context, options, NULL);
 	if (!g_option_context_parse(context, &argc, &argv, &gerr)) {
-		g_printerr("%s\n", gerr->message);
+		g_error("%s", gerr->message);
 		g_clear_error(&gerr);
 		got_error = TRUE;
 		goto done;
 	}
-	chan = gatt_connect(opt_src, opt_dst, opt_dst_type, opt_sec_level,
-				opt_psm, opt_mtu, connect_cb, &gerr);
-	if (chan == NULL) {
-		g_printerr("%s\n", gerr->message);
-		g_clear_error(&gerr);
-		got_error = TRUE;
-		goto done;
-	} else {
-		g_io_add_watch(chan, G_IO_HUP, channel_watcher, NULL);
+	while (1) {
+		chan = gatt_connect(opt_src, opt_dst, opt_dst_type,
+			opt_sec_level, opt_psm, opt_mtu, connect_cb, &gerr);
+		if (chan) {
+			g_io_add_watch(chan, G_IO_HUP, channel_watcher, NULL);
+			event_loop = g_main_loop_new(NULL, FALSE);
+			g_main_loop_run(event_loop);
+			g_main_loop_unref(event_loop);
+		} else {
+			g_warning("%s", gerr->message);
+			g_clear_error(&gerr);
+			got_error = TRUE;
+		}
+		sleep(10);
 	}
-
-	event_loop = g_main_loop_new(NULL, FALSE);
-	g_main_loop_run(event_loop);
-	g_main_loop_unref(event_loop);
 
 done:
 	g_option_context_free(context);
