@@ -35,12 +35,12 @@ int dbconfig(char *conffile)
 			rc = 1;
 			break;
 		}
-		for (k = buf; k < e && isspace(k); k++) /*nothing*/ ;
+		for (k = buf; k < e && isspace(*k); k++) /*nothing*/ ;
 		if (*k == '#') break;
-		for (v = k; v < e && !isspace(v)
+		for (v = k; v < e && !isspace(*v)
 			    && *v != ':' && *v != '='; v++) /*nothing*/ ;
 		if (v < e && (*v == ':' || *v == '=')) v++;
-		for (; v < e && (isspace(v) || *v == ':' || *v == '=')
+		for (; v < e && (isspace(*v) || *v == ':' || *v == '=')
 		     					; v++) /*nothing*/ ;
 		if (v >= e) {
 			/* no value */

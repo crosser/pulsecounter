@@ -1,4 +1,4 @@
-CFLAGS += -I$(BLUEZ) `pkg-config --cflags glib-2.0` \
+CFLAGS += -g -I$(BLUEZ) `pkg-config --cflags glib-2.0` \
 	`pkg-config mariadb --cflags`
 LDLIBS = $(BLUEZ)/lib/.libs/libbluetooth-internal.a \
 	$(BLUEZ)/src/.libs/libshared-glib.a \
