@@ -33,6 +33,7 @@ static int opt_mtu = 0;
 static int opt_psm = 0;
 static char *opt_sec_level = NULL;
 static char *opt_dbconffile = NULL;
+static gboolean opt_daemon = FALSE;
 
 static GMainLoop *event_loop;
 
@@ -49,7 +50,9 @@ static GOptionEntry options[] = {
 		"Specify the PSM for GATT/ATT over BR/EDR", "PSM" },
 	{ "sec-level", 'l', 0, G_OPTION_ARG_STRING, &opt_sec_level,
 		"Set security level. Default: low", "[low | medium | high]"},
-	{ "dbconfig", 'c', 0, G_OPTION_ARG_STRING, &opt_dbconffile,
+	{ "dbconfig", 'c', 0, G_OPTION_ARG_FILENAME, &opt_dbconffile,
+		"Specify file name with database configuration", "cfile"},
+	{ "daemon", 'd', 0, G_OPTION_ARG_NONE, &opt_daemon,
 		"Specify file name with database configuration", "cfile"},
 	{ NULL },
 };
@@ -175,6 +178,7 @@ int main(int argc, char *argv[])
 		got_error = TRUE;
 		goto done;
 	}
+	if (opt_daemon) daemon(0, 0);
 	while (1) {
 		chan = gatt_connect(opt_src, opt_dst, opt_dst_type,
 			opt_sec_level, opt_psm, opt_mtu, connect_cb, &gerr);
