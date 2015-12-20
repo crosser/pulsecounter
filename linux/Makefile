@@ -17,6 +17,7 @@ pulsecounter: pulsecounter.o dbstore.o \
 	$(BLUEZ)/attrib/utils.o $(BLUEZ)/src/log.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-
-#	$(BLUEZ)/attrib/interactive.o \
-#	$(BLUEZ)/client/display.o
+testconf: dbstore.c dbstore.h
+	$(CC) -g `pkg-config --cflags glib-2.0` `pkg-config mariadb --cflags` \
+		-DTEST_CONFIG $< `pkg-config --libs glib-2.0` \
+		`pkg-config mariadb --libs` -o $@

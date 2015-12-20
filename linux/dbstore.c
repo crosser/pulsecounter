@@ -19,40 +19,49 @@ static char *dbnm = "watermeter";
 int dbconfig(char *conffile)
 {
 	FILE *fp = fopen(conffile, "r");
+	int lc = 0;
 	int rc = 0;
 	char buf[128];
 
-	if (!fp)
-		return 1;
+	if (!fp) return 1;
 	while (fgets(buf, sizeof(buf), fp)) {
 		char *k, *v, *e;
 
+		lc++;
 		e = buf + strlen(buf) - 1;
-		if (*e == '\n')
-			*e = '\0';
+		if (*e == '\n') *e = '\0';
 		else {
-			/* line too long */
+			g_warning("%s:%d line too long", conffile, lc);
 			rc = 1;
 			break;
 		}
+		if ((k = strchr(buf, '#'))) {
+			e=k;
+			*e = '\0';
+		}
 		for (k = buf; k < e && isspace(*k); k++) /*nothing*/ ;
-		if (*k == '#') break;
 		for (v = k; v < e && !isspace(*v)
 			    && *v != ':' && *v != '='; v++) /*nothing*/ ;
-		if (v < e && (*v == ':' || *v == '=')) v++;
+		*v++ = '\0';
+		if (*k == '\0') continue; /* empty or comment-only line */
 		for (; v < e && (isspace(*v) || *v == ':' || *v == '=')
 		     					; v++) /*nothing*/ ;
 		if (v >= e) {
-			/* no value */
+			g_warning("%s:%d no value for key \"%s\"",
+					conffile, lc, k);
 			rc = 1;
 			break;
-		}
+		} 
+#ifdef TEST_CONFIG
+		printf("k=%s v=%s\n", k, v);
+#endif
 		if      (!strcmp(k, "host"))     host = strdup(v);
 		else if (!strcmp(k, "user"))     user = strdup(v);
 		else if (!strcmp(k, "password")) pass = strdup(v);
 		else if (!strcmp(k, "database")) dbnm = strdup(v);
 		else {
-			/* unknown key */
+			g_warning("%s:%d unrecognized key \"%s\"",
+					conffile, lc, k);
 			rc = 1;
 			break;
 		}
@@ -119,3 +128,16 @@ int dbstore(uint8_t which, uint32_t val)
 	mysql_close(&mysql);
 	return rc;
 }
+
+#ifdef TEST_CONFIG
+int main(int const argc, char *argv[])
+{
+	if (dbconfig(argv[1])) {
+		printf("could not parse config file\n");
+		return 1;
+	}
+	printf("host: %s\nuser: %s\npass: %s\ndbnm: %s\n",
+		host, user, pass, dbnm);
+	return 0;
+}
+#endif
