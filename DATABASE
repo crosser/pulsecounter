@@ -57,3 +57,32 @@ mysql:
 +---------------------+-------+
 6 rows in set (0.00 sec)
 
+2015-12-20:
+
+After some playing with it, I think it is a mistake. One of my assumed
+goals was minimize carrying state along time. This is achieved in the
+`counter` table, but not in `adjustment` table. Namely, when you need to
+adjust before one or more later adjustments, you'd have to update the
+later adjustment records. Advantage of this approach is that you need
+to select just one row from the `adjustment` table in addition to the
+row of the `counter` table. Disadvantage is as stated above, departure
+from the "write only" principle.
+
+So I am changing the design to this:
+
+
+select timestamp, value+adj as value from
+  (select c.timestamp timestamp, c.value value, 
+		(select sum(value) from adjustment a
+			where a.timestamp <= c.timestamp
+		) adj from counter c
+  ) t;
+
+so every row in the `adjustment` table contains incremental offset,
+typically simply the last recorded value of the counter (unless some
+events where lost while the sensor was down). Select is potentially
+more expensive; given that I do not anticipate many adjustments this
+should not be a problem for a single-user setup. For "industrial
+size" setup, the problem is easily solved caching the result of the
+"summing" select.
+
