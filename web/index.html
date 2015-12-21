@@ -6,9 +6,12 @@
 <script>
   var canvas;
   var context;
+  var ww;
+  var wh;
+  var tmin;
+  var tmax;
   function drawplot(times, color) {
-    var tmin = times[0][0];
-    var tfact = 640/(times[times.length-1][0] - tmin);
+    var tfact = ww / (tmax - tmin);
     var i;
     var height = [];
     var hmax = 0;
@@ -19,12 +22,12 @@
       if (hmax < height[i]) hmax = height[i];
     }
     height[i+1] = height[i];
-    hfact = 480 / hmax;
+    hfact = wh / hmax;
     context.beginPath();
-    context.moveTo(0, 480 - height[1]*hfact);
+    context.moveTo(0, wh - height[1]*hfact);
     for (i = 1; i < times.length; i++) {
-      context.lineTo((times[i][0] - tmin)*tfact,480 - height[i]*hfact);
-      context.lineTo((times[i][0] - tmin)*tfact,480 - height[i+1]*hfact);
+      context.lineTo((times[i][0] - tmin)*tfact,wh - height[i]*hfact);
+      context.lineTo((times[i][0] - tmin)*tfact,wh - height[i+1]*hfact);
     }
     context.strokeStyle = color;
     context.stroke();
@@ -32,14 +35,61 @@
   function gotdata(data) {
     canvas = document.getElementById("plot");
     context = canvas.getContext("2d");
+    ww = canvas.offsetWidth;
+    wh = canvas.offsetHeight;
+    tmin = data.range.lo;
+    tmax = data.range.hi;
+    document.getElementById("cold").innerHTML = data.current.cold;
+    document.getElementById("hot").innerHTML = data.current.hot;
     drawplot(data.cold, "blue");
     drawplot(data.hot, "red");
   }
 </script>
+<style>
+h1 {
+  text-align: center;
+}
+br {
+  clear: all;
+}
+div#currentvals {
+  width: 16em;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  font-size: 150%;
+}
+div.current {
+  position: relative;
+  padding: 0.2em;
+  border: solid 1px black;
+  margin: 1em;
+}
+div#cold {
+  float: left;
+  background-color: #d0e0ff;
+}
+div#hot {
+  float: right;
+  background-color: #ffd0e0;
+}
+canvas#plot {
+  margin-left: auto;
+  margin-right: auto;
+  border: solid 1px black;
+}
+</style>
+<title>Water Meters</title>
 </head><body>
-<canvas id="plot" width="640" height = "480"
-        style="border:solid 1px #000000;"></canvas>
-<hr/>
+<h1>Water Meters</h1>
+<div id="currentvals">
+  Current Values
+  <div class="current" id="cold">cold</div>
+  <div class="current" id="hot">hot</div>
+</div>
+<br />
+<canvas id="plot" width="640" height = "480"></canvas>
+<br />
 <div id=debug>
 </div>
 <script>
