@@ -1,5 +1,12 @@
 #!/usr/bin/env runhaskell
 
+--                                                                        --
+-- I am truly sorry. I would have used servant, but it failed to install. --
+-- I would have used sqeletto, but got thrown back by depencencies.       --
+-- I would have used some standard config file parser but they are all    --
+-- overkills. This program is a very quick and dirty hack.                --
+--                                                                        --
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -51,11 +58,20 @@ cgiMain = do
          \) adj from hotcnt c \
            \where timestamp between ? and ? order by timestamp \
        \) t;" (slo, shi)
+  [(ccold, chot)] <- liftIO $ query_ conn
+    "select lcold+acold as cold, lhot+ahot as hot from \
+    \(select value as lcold from coldcnt order by timestamp desc limit 1) cc, \
+    \(select sum(value) as acold from coldadj) ac, \
+    \(select value as lhot from hotcnt order by timestamp desc limit 1) ch, \
+    \(select sum(value) as ahot from hotadj) ah;"
   _ <- liftIO $ close conn
+
   setHeader "Content-type" "application/json"
   output $ "{\"range\": {\"lo\": " ++ show (olo :: Int)
           ++ ", \"hi\": " ++ show (ohi :: Int)
-          ++ "}, \"cold\": [" ++ showjson cold
+          ++ "}, \"current\": {\"cold\": " ++ show (floor (ccold :: Double))
+          ++ ", \"hot\": " ++ show (floor (chot :: Double))
+          ++ "}}, \"cold\": [" ++ showjson cold
           ++ "], \"hot\": [" ++ showjson hot ++ "]}\n"
 
 showjson :: [(Int, Double)] -> String
