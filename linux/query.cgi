@@ -1,4 +1,5 @@
 #!/bin/env runhaskell
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -15,9 +16,11 @@ main = runCGI $ handleErrors cgiMain
 
 cgiMain :: CGI CGIResult
 cgiMain = do
-  conn <- liftIO $ connect defaultConnectInfo { connectUser = "watermeter"
-                                              , connectPassword = "xxxxxxxx"
-                                              , connectDatabase = "watermeter"
+  conf <- liftIO $ readConf "/etc/watermeter.db"
+  conn <- liftIO $ connect defaultConnectInfo { connectHost = host conf
+					      , connectUser = user conf
+                                              , connectPassword = pass conf
+                                              , connectDatabase = dbnm conf
                                               }
   today <- liftIO getClockTime
   let tomorrow = addToClockTime (noTimeDiff {tdDay = 1}) today
@@ -58,3 +61,24 @@ cgiMain = do
 showjson :: [(Int, Double)] -> String
 showjson l = intercalate "," $ map (\(t, c) -> "[" ++ show t ++ "," ++ show (floor c) ++ "]") l
 
+data Conf = Conf { host :: String
+		 , user :: String
+		 , pass :: String
+		 , dbnm :: String
+		 }
+
+readConf :: String -> IO Conf
+readConf fn =
+  readFile fn >>= return . (foldr parseLine (Conf "" "" "" "")) . lines
+  where
+    parseLine :: String -> Conf -> Conf
+    parseLine l sum =
+      case words l of
+        [k, v] ->
+          case k of
+            "host" -> sum { host = v }
+            "user" -> sum { user = v }
+            "password" -> sum { pass = v }
+            "database" -> sum { dbnm = v }
+            _ -> error $ "bad key in config line \"" ++ l ++ "\""
+        _ -> error $ "bad config line \"" ++ l ++ "\""
