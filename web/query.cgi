@@ -71,7 +71,7 @@ cgiMain = do
           ++ ", \"hi\": " ++ show (ohi :: Int)
           ++ "}, \"current\": {\"cold\": " ++ show (floor (ccold :: Double))
           ++ ", \"hot\": " ++ show (floor (chot :: Double))
-          ++ "}}, \"cold\": [" ++ showjson cold
+          ++ "}, \"cold\": [" ++ showjson cold
           ++ "], \"hot\": [" ++ showjson hot ++ "]}\n"
 
 showjson :: [(Int, Double)] -> String
