@@ -1,0 +1,6 @@
+# Example config file for the database adapter
+
+# host = mysql.host.dom
+user: beancounter
+password = verrysekret   # replace with yours!
+database=watermeter
