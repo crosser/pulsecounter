@@ -5,54 +5,92 @@
 <head>
 <script>
   var canvas;
-  var context;
+  var ctx;
   var ww;
   var wh;
+  var hmax = 0;
   var hfact;
   var tmin;
   var tmax;
   var tfact;
+  var xzero = 20;
+  var yzero = 20;
   function px(x) {
-    return (x - tmin) * tfact;
+    return xzero + ((x - tmin) * tfact);
   }
   function py(y) {
-    return (wh - y * hfact);
+    return wh - yzero - (y * hfact);
   }
-  function drawplot(times, color) {
+  function xaxis() {
+    ctx.beginPath();
+    ctx.moveTo(px(tmin), py(0));
+    ctx.lineTo(px(tmax), py(0));
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+  }
+  function yaxis() {
+    ctx.beginPath();
+    ctx.moveTo(px(tmin), py(0));
+    ctx.lineTo(px(tmin), py(hmax));
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+  }
+  function differentiate(times) { /* updates glbal hmax */
+    var res = [];
+    var dv, dt, v;
+
+    for (i = 0; i < times.length - 1; i++) {
+      dv = times[i+1][1] - times[i][1];
+      dt = times[i+1][0] - times[i][0];
+      if (dt != 0 && dv != 0) {
+        v = dv / dt;
+        if (hmax < v) hmax = v;
+        res.push([times[i][0], v]);
+      }
+    }
+    res.push([times[i][0], v]);
+
+    return res;
+  }
+  function drawplot(data, color) {
     var i;
-    var height = [];
-    var hmax = 0;
 
-    tfact = ww / (tmax - tmin);
-    for (i = 1; i < times.length; i++) {
-      height[i] = (times[i][1] - times[i-1][1]) / (times[i][0] - times[i-1][0]);
-      if (hmax < height[i]) hmax = height[i];
+    ctx.beginPath();
+    ctx.moveTo(px(data[0][0]), py(data[0][1]));
+    for (i = 1; i < data.length; i++) {
+      ctx.lineTo(px(data[i][0]), py(data[i - 1][1]));
+      ctx.lineTo(px(data[i][0]), py(data[i][1]));
     }
-    height[i+1] = height[i];
-    hfact = wh / hmax;
-
-    context.beginPath();
-    context.moveTo(px(times[0][1]), py(height[1]));
-    for (i = 1; i < times.length; i++) {
-      context.lineTo(px(times[i][0]), py(height[i]));
-      context.lineTo(px(times[i][0]), py(height[i+1]));
-    }
-    context.lineTo(px(tmax), py(height[i+1]));
-
-    context.strokeStyle = color;
-    context.stroke();
+    ctx.strokeStyle = color;
+    ctx.stroke();
   }
   function gotdata(data) {
+    var cold_d = [], hot_d = [];
+
+    document.getElementById("cold").innerHTML =
+      (data.current.cold / 100).toFixed(2);
+    document.getElementById("hot").innerHTML =
+      (data.current.hot / 100).toFixed(2);
     canvas = document.getElementById("plot");
-    context = canvas.getContext("2d");
+
+    ctx = canvas.getContext("2d");
     ww = canvas.width;
     wh = canvas.height;
+
     tmin = data.range.lo;
     tmax = data.range.hi;
-    document.getElementById("cold").innerHTML = data.current.cold / 100;
-    document.getElementById("hot").innerHTML = data.current.hot / 100;
-    drawplot(data.cold, "blue");
-    drawplot(data.hot, "red");
+    tfact = (ww - xzero) / (tmax - tmin);
+    cold_d = differentiate(data.cold);
+    hot_d = differentiate(data.hot);
+    /* differetiate() updates hmax */
+    hfact = (wh - yzero) / hmax;
+
+    document.getElementById("debug").innerHTML.append("<br>" ++ cold_d + "<br>" + hot_d);
+
+    drawplot(cold_d, "blue");
+    drawplot(hot_d, "red");
+    xaxis();
+    yaxis();
   }
 </script>
 <style>
@@ -91,7 +129,7 @@ canvas#plot {
   margin-right: auto;
   display: block;
   width: 640px;
-  height: 480px;
+  height: 320px;
   border: solid 1px black;
 }
 </style>
@@ -104,7 +142,7 @@ canvas#plot {
   <div class="current" id="hot">hot</div>
 </div>
 <br />
-<canvas id="plot" width="640" height = "480"></canvas>
+<canvas id="plot" width="640" height = "320"></canvas>
 <br />
 <div id=debug>
 </div>
