@@ -8,27 +8,37 @@
   var context;
   var ww;
   var wh;
+  var hfact;
   var tmin;
   var tmax;
+  var tfact;
+  function px(x) {
+    return (x - tmin) * tfact;
+  }
+  function py(y) {
+    return (wh - y * hfact);
+  }
   function drawplot(times, color) {
-    var tfact = ww / (tmax - tmin);
     var i;
     var height = [];
     var hmax = 0;
-    var hfact;
 
+    tfact = ww / (tmax - tmin);
     for (i = 1; i < times.length; i++) {
-      height[i] = 1 / (times[i][0] - times[i-1][0]);
+      height[i] = (times[i][1] - times[i-1][1]) / (times[i][0] - times[i-1][0]);
       if (hmax < height[i]) hmax = height[i];
     }
     height[i+1] = height[i];
     hfact = wh / hmax;
+
     context.beginPath();
-    context.moveTo(0, wh - height[1]*hfact);
+    context.moveTo(px(times[0][1]), py(height[1]));
     for (i = 1; i < times.length; i++) {
-      context.lineTo((times[i][0] - tmin)*tfact,wh - height[i]*hfact);
-      context.lineTo((times[i][0] - tmin)*tfact,wh - height[i+1]*hfact);
+      context.lineTo(px(times[i][0]), py(height[i]));
+      context.lineTo(px(times[i][0]), py(height[i+1]));
     }
+    context.lineTo(px(tmax), py(height[i+1]));
+
     context.strokeStyle = color;
     context.stroke();
   }
