@@ -35,12 +35,12 @@
   function gotdata(data) {
     canvas = document.getElementById("plot");
     context = canvas.getContext("2d");
-    ww = canvas.offsetWidth;
-    wh = canvas.offsetHeight;
+    ww = canvas.width;
+    wh = canvas.height;
     tmin = data.range.lo;
     tmax = data.range.hi;
-    document.getElementById("cold").innerHTML = data.current.cold;
-    document.getElementById("hot").innerHTML = data.current.hot;
+    document.getElementById("cold").innerHTML = data.current.cold / 100;
+    document.getElementById("hot").innerHTML = data.current.hot / 100;
     drawplot(data.cold, "blue");
     drawplot(data.hot, "red");
   }
@@ -50,12 +50,13 @@ h1 {
   text-align: center;
 }
 br {
-  clear: all;
+  clear: both;
 }
 div#currentvals {
-  width: 16em;
+  width: 14em;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 10px;
   text-align: center;
   font-size: 150%;
 }
@@ -63,7 +64,7 @@ div.current {
   position: relative;
   padding: 0.2em;
   border: solid 1px black;
-  margin: 1em;
+  margin: 0.2em;
 }
 div#cold {
   float: left;
@@ -74,8 +75,13 @@ div#hot {
   background-color: #ffd0e0;
 }
 canvas#plot {
+  padding-left: 0;
+  padding-right: 0;
   margin-left: auto;
   margin-right: auto;
+  display: block;
+  width: 640px;
+  height: 480px;
   border: solid 1px black;
 }
 </style>
@@ -95,6 +101,7 @@ canvas#plot {
 <script>
   var xmlhttp = new XMLHttpRequest();
   var url = "query.cgi";
+  var qstr = "?lo=2015-12-19+00:00:00&hi=2015-12-20+00:00:00";
 
   xmlhttp.onreadystatechange = function() {
     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -103,7 +110,7 @@ canvas#plot {
       gotdata(myData);
     }
   }
-  xmlhttp.open("GET", url, true);
+  xmlhttp.open("GET", url+qstr, true);
   xmlhttp.send();
 </script>
 </body>
