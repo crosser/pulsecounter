@@ -63,18 +63,22 @@
     ctx.strokeStyle = color;
     ctx.stroke();
   }
+  function redraw() {
+    if (cold_d.length && hot_d.length) {
+      drawplot(cold_d, "blue");
+      drawplot(hot_d, "red");
+      xaxis();
+      yaxis();
+    } else {
+      /* load animation here */ ;
+    }
+  }
 
   function gotdata(data) {
     document.getElementById("cold").innerHTML =
       (data.current.cold / 100).toFixed(2);
     document.getElementById("hot").innerHTML =
       (data.current.hot / 100).toFixed(2);
-    canvas = document.getElementById("plot");
-
-    ctx = canvas.getContext("2d");
-    ww = canvas.width;
-    wh = canvas.height;
-
     tmin = data.range.lo;
     tmax = data.range.hi;
     tfact = (ww - xzero) / (tmax - tmin);
@@ -83,13 +87,8 @@
     cold_d = differentiate(data.cold);
     hot_d = differentiate(data.hot);
     hfact = (wh - yzero) / hmax;
-
     //document.getElementById("debug").innerHTML = cold_d + "<br>" + hot_d;
-
-    drawplot(cold_d, "blue");
-    drawplot(hot_d, "red");
-    xaxis();
-    yaxis();
+    redraw();
   }
 
   function sendquery(lo, hi) {
@@ -108,17 +107,33 @@
     xmlhttp.send();
   }
 
+  function resize() {
+    ww = window.innerWidth;
+    if (ww > window.innerHeight) ww = window.innerHeight;
+    wh = ww / 2;
+    canvas.width = ww;
+    canvas.height = wh;
+    canvas.style.width = ww + "px";
+    canvas.style.height = wh + "px";
+    redraw();
+  }
+
   function initialize() {
     dbg = document.getElementById("debug");
+    canvas = document.getElementById("plot");
+    ctx = canvas.getContext("2d");
     xmlhttp = new XMLHttpRequest();
+    resize();
     sendquery();
   }
 
   /* Set up */
   if(window.attachEvent) {
     window.attachEvent('onload', initialize);
+    window.attachEvent('onresize', resize);
   } else {
     window.onload = initialize;
+    window.onresize = resize;
   }
 </script>
 <style>
