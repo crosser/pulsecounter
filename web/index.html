@@ -13,12 +13,37 @@
   var xzero = 20, yzero = 20;
   var cold_d = [], hot_d = [];
 
+  function getcomb(lo, hi) {
+    var comb = [], lb = [];
+    var d = hi - lo;
+    var ord = Math.pow(10, Math.floor(Math.log10(d)));
+    var scl = Math.floor(d / ord);
+    var inc, inc2, first, x, lb;
+
+    if (scl < 2) { inc = 0.1; inc2 = 0.5; }
+    else if (scl < 5) { inc = 0.2; inc2 = 1; }
+    else { inc = 0.5; inc2 = 2; }
+    inc *= ord;
+    inc2 *= ord;
+    first = (Math.floor(lo / inc) + 1) * inc;
+    for (x = 0; x < (d / inc) - 1.5; x++)
+      comb.push(first + inc * x);
+    first = (Math.floor(lo / inc2) + 1) * inc2;
+    for (x = 0; x < (d / inc2) - 1.5; x++)
+      lb.push(first + inc2 * x);
+    //dbg.innerHTML = "ord=" + ord + "<br>inc=" + inc + "<br>"
+    //              + comb + "<br>" + lb;
+    return [comb, lb];
+  }
+
   function px(x) {
     return xzero + ((x - tmin) * tfact);
   }
+
   function py(y) {
     return wh - yzero - (y * hfact);
   }
+
   function xaxis() {
     ctx.beginPath();
     ctx.moveTo(px(tmin), py(0));
@@ -26,13 +51,34 @@
     ctx.strokeStyle = "black";
     ctx.stroke();
   }
+
   function yaxis() {
+    var comb = getcomb(0, hmax);
+    var i;
+
+    ctx.beginPath();
+    for (i = 0; comb[0][i]; i++) {
+      ctx.moveTo(px(tmin) - 5, py(comb[0][i]));
+      ctx.lineTo(px(tmax), py(comb[0][i]));
+    }
+    ctx.strokeStyle = "lightgray";
+    ctx.stroke();
+
     ctx.beginPath();
     ctx.moveTo(px(tmin), py(0));
     ctx.lineTo(px(tmin), py(hmax));
     ctx.strokeStyle = "black";
     ctx.stroke();
+
+    ctx.fillStyle = "black";
+    ctx.font = "bold 8px Courier";
+    ctx.fillText(0, px(tmin) - 8, py(0));
+    for (i = 0; comb[1][i]; i++) {
+      ctx.fillText(comb[1][i], px(tmin) - xzero + 2, py(comb[1][i]));
+    }
+    ctx.fillText("l/h", px(tmin) + 2, py(hmax) + 8);
   }
+
   /* @ updates global var `hmax` */
   function differentiate(times) {
     var res = [];
@@ -51,6 +97,7 @@
 
     return res;
   }
+
   function drawplot(data, color) {
     var i;
 
@@ -63,21 +110,26 @@
     ctx.strokeStyle = color;
     ctx.stroke();
   }
+
   function showloading() {
     ctx.fillStyle = "green";
     ctx.font = "bold 16px Courier";
     ctx.fillText("loading", (ww / 2) - 40 , (wh / 2) + 8);
   }
+
   function clearplot() {
     ctx.clearRect(0, 0, ww, wh);
   }
+
   function redraw() {
     if (cold_d.length && hot_d.length) {
+      tfact = (ww - xzero) / (tmax - tmin);
+      hfact = (wh - yzero) / hmax;
       clearplot();
-      drawplot(cold_d, "blue");
-      drawplot(hot_d, "red");
       xaxis();
       yaxis();
+      drawplot(cold_d, "blue");
+      drawplot(hot_d, "red");
     } else {
       showloading();
     }
@@ -90,12 +142,10 @@
       (data.current.hot / 100).toFixed(2);
     tmin = data.range.lo;
     tmax = data.range.hi;
-    tfact = (ww - xzero) / (tmax - tmin);
     /* differetiate() updates hmax */
     hmax = 0;
     cold_d = differentiate(data.cold);
     hot_d = differentiate(data.hot);
-    hfact = (wh - yzero) / hmax;
     //dbg.innerHTML = "hmax=" + hmax + " hfact=" + hfact + "<br>"
     //              + cold_d + "<br>" + hot_d;
     redraw();
