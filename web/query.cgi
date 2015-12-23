@@ -48,16 +48,14 @@ cgiMain = do
     "select to_seconds(timestamp) as time, value+adj as value from \
        \(select c.timestamp timestamp, c.value value, \
          \(select sum(value) from coldadj a where a.timestamp <= c.timestamp \
-         \) adj from coldcnt c \
-           \where timestamp between ? and ? order by timestamp \
-       \) t;" (slo, shi)
+         \) adj from coldcnt c where timestamp between ? and ? \
+       \) t order by timestamp;" (slo, shi)
   hot <- liftIO $ query conn
     "select to_seconds(timestamp) as time, value+adj as value from \
        \(select c.timestamp timestamp, c.value value, \
          \(select sum(value) from hotadj a where a.timestamp <= c.timestamp \
-         \) adj from hotcnt c \
-           \where timestamp between ? and ? order by timestamp \
-       \) t;" (slo, shi)
+         \) adj from hotcnt c where timestamp between ? and ? \
+       \) t order by timestamp;" (slo, shi)
   [(ccold, chot)] <- liftIO $ query_ conn
     "select lcold+acold as cold, lhot+ahot as hot from \
     \(select value as lcold from coldcnt order by timestamp desc limit 1) cc, \
