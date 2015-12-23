@@ -4,17 +4,15 @@
 <html xml:lang="en" lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <script>
-  var canvas;
-  var ctx;
-  var ww;
-  var wh;
-  var hmax = 0;
-  var hfact;
-  var tmin;
-  var tmax;
-  var tfact;
-  var xzero = 20;
-  var yzero = 20;
+  var dbg;
+  var xmlhttp;
+  var canvas, ctx;
+  var ww, wh;
+  var hmax, hfact;
+  var tmin, tmax, tfact;
+  var xzero = 20, yzero = 20;
+  var cold_d = [], hot_d = [];
+
   function px(x) {
     return xzero + ((x - tmin) * tfact);
   }
@@ -35,7 +33,8 @@
     ctx.strokeStyle = "black";
     ctx.stroke();
   }
-  function differentiate(times) { /* updates glbal hmax */
+  /* @ updates global var `hmax` */
+  function differentiate(times) {
     var res = [];
     var dv, dt, v;
 
@@ -64,9 +63,8 @@
     ctx.strokeStyle = color;
     ctx.stroke();
   }
-  function gotdata(data) {
-    var cold_d = [], hot_d = [];
 
+  function gotdata(data) {
     document.getElementById("cold").innerHTML =
       (data.current.cold / 100).toFixed(2);
     document.getElementById("hot").innerHTML =
@@ -80,17 +78,47 @@
     tmin = data.range.lo;
     tmax = data.range.hi;
     tfact = (ww - xzero) / (tmax - tmin);
+    /* differetiate() updates hmax */
+    hmax = 0;
     cold_d = differentiate(data.cold);
     hot_d = differentiate(data.hot);
-    /* differetiate() updates hmax */
     hfact = (wh - yzero) / hmax;
 
-    document.getElementById("debug").innerHTML.append("<br>" ++ cold_d + "<br>" + hot_d);
+    //document.getElementById("debug").innerHTML = cold_d + "<br>" + hot_d;
 
     drawplot(cold_d, "blue");
     drawplot(hot_d, "red");
     xaxis();
     yaxis();
+  }
+
+  function sendquery(lo, hi) {
+    var url = "query.cgi";
+
+    if (lo && hi) url += "?lo=" + lo + "&" + hi;
+    else url = "query.cgi?lo=2015-12-19+00:00:00&hi=2015-12-20+00:00:00"; //FIX
+    xmlhttp.onreadystatechange = function() {
+      if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        // dbg.innerHTML = xmlhttp.responseText;
+        var myData = JSON.parse(xmlhttp.responseText);
+        gotdata(myData);
+      }
+    }
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+  }
+
+  function initialize() {
+    dbg = document.getElementById("debug");
+    xmlhttp = new XMLHttpRequest();
+    sendquery();
+  }
+
+  /* Set up */
+  if(window.attachEvent) {
+    window.attachEvent('onload', initialize);
+  } else {
+    window.onload = initialize;
   }
 </script>
 <style>
@@ -146,19 +174,4 @@ canvas#plot {
 <br />
 <div id=debug>
 </div>
-<script>
-  var xmlhttp = new XMLHttpRequest();
-  var url = "query.cgi";
-  var qstr = "?lo=2015-12-19+00:00:00&hi=2015-12-20+00:00:00";
-
-  xmlhttp.onreadystatechange = function() {
-    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-      document.getElementById("debug").innerHTML = xmlhttp.responseText;
-      var myData = JSON.parse(xmlhttp.responseText);
-      gotdata(myData);
-    }
-  }
-  xmlhttp.open("GET", url+qstr, true);
-  xmlhttp.send();
-</script>
 </body>
