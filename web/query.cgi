@@ -14,6 +14,7 @@ module Main where
 import Control.Monad
 import Data.Maybe
 import Data.List
+import Data.Ratio
 import System.Locale
 import System.Time
 import Network.CGI
@@ -42,16 +43,16 @@ cgiMain = do
   --                      ++ " dhi=" ++ show dhi ++ " ihi=" ++ show ihi
   let slo = fromMaybe dlo ilo :: String
       shi = fromMaybe dhi ihi :: String
-  [(olo, ohi)] <- liftIO $ query conn "select to_seconds(?), to_seconds(?);"
+  [(olo, ohi)] <- liftIO $ query conn "select unix_timestamp(?), unix_timestamp(?);"
                          [slo, shi]
   cold <- liftIO $ query conn
-    "select to_seconds(timestamp) as time, value+adj as value from \
+    "select unix_timestamp(timestamp) as time, value+adj as value from \
        \(select c.timestamp timestamp, c.value value, \
          \(select sum(value) from coldadj a where a.timestamp <= c.timestamp \
          \) adj from coldcnt c where timestamp between ? and ? \
        \) t order by timestamp;" (slo, shi)
   hot <- liftIO $ query conn
-    "select to_seconds(timestamp) as time, value+adj as value from \
+    "select unix_timestamp(timestamp) as time, value+adj as value from \
        \(select c.timestamp timestamp, c.value value, \
          \(select sum(value) from hotadj a where a.timestamp <= c.timestamp \
          \) adj from hotcnt c where timestamp between ? and ? \
@@ -65,14 +66,14 @@ cgiMain = do
   _ <- liftIO $ close conn
 
   setHeader "Content-type" "application/json"
-  output $ "{\"range\": {\"lo\": " ++ show (olo :: Int)
-          ++ ", \"hi\": " ++ show (ohi :: Int)
-          ++ "}, \"current\": {\"cold\": " ++ show (floor (ccold :: Double))
-          ++ ", \"hot\": " ++ show (floor (chot :: Double))
+  output $ "{\"range\": {\"lo\": " ++ show (floor (olo :: (Ratio Integer)))
+          ++ ", \"hi\": " ++ show (floor (ohi :: (Ratio Integer)))
+          ++ "}, \"current\": {\"cold\": " ++ show (floor (ccold :: (Ratio Integer)))
+          ++ ", \"hot\": " ++ show (floor (chot :: (Ratio Integer)))
           ++ "}, \"cold\": [" ++ showjson cold
           ++ "], \"hot\": [" ++ showjson hot ++ "]}\n"
 
-showjson :: [(Int, Double)] -> String
+showjson :: [(Int, (Ratio Integer))] -> String
 showjson l = intercalate "," $ map (\(t, c) -> "[" ++ show t ++ "," ++ show (floor c) ++ "]") l
 
 data Conf = Conf { host :: String
