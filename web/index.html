@@ -216,6 +216,28 @@
     return date;
   }
 
+  function prevweek() {
+    var tdy = daystart(new Date());
+    var dow = tdy.getDay();
+    var wstart, wend;
+
+    wstart = new Date(1*tdy - 86400000 * (dow + 7));
+    wend = new Date(1*wstart + 86400000 * 7);
+    xmlhttp = new XMLHttpRequest();
+    sendquery(wstart.toISOString(), wend.toISOString());
+  }
+
+  function thisweek() {
+    var tdy = daystart(new Date());
+    var dow = tdy.getDay();
+    var wstart, wend;
+
+    wstart = new Date(1*tdy - 86400000 * dow);
+    wend = new Date(1*wstart + 86400000 * 7);
+    xmlhttp = new XMLHttpRequest();
+    sendquery(wstart.toISOString(), wend.toISOString());
+  }
+
   function beforeyesterday() {
     var tdy = daystart(new Date());
     var ytd = new Date(1*tdy - 86400000);
@@ -248,8 +270,8 @@
     document.getElementById("today").onclick = today;
     document.getElementById("yesterday").onclick = yesterday;
     document.getElementById("beforeyesterday").onclick = beforeyesterday;
-    //document.getElementById("thisweek").onclick = thisweek;
-    //document.getElementById("lastweek").onclick = lastweek;
+    document.getElementById("thisweek").onclick = thisweek;
+    document.getElementById("prevweek").onclick = prevweek;
   }
 
   /* Set up */
@@ -306,7 +328,7 @@ canvas#plot {
   display: block;
   width: 640px;
   height: 320px;
-  border: solid 1px black;
+  /*border: solid 1px black;*/
 }
 div#queries {
   margin-left: auto;
