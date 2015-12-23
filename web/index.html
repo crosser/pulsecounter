@@ -42,7 +42,7 @@
       dv = times[i+1][1] - times[i][1];
       dt = times[i+1][0] - times[i][0];
       if (dt != 0 && dv != 0) {
-        v = dv / dt;
+        v = (dv / dt) * 360 ; /* Litres per hour */
         if (hmax < v) hmax = v;
         res.push([times[i][0], v]);
       }
@@ -63,14 +63,23 @@
     ctx.strokeStyle = color;
     ctx.stroke();
   }
+  function showloading() {
+    ctx.fillStyle = "green";
+    ctx.font = "bold 16px Courier";
+    ctx.fillText("loading", (ww / 2) - 40 , (wh / 2) + 8);
+  }
+  function clearplot() {
+    ctx.clearRect(0, 0, ww, wh);
+  }
   function redraw() {
     if (cold_d.length && hot_d.length) {
+      clearplot();
       drawplot(cold_d, "blue");
       drawplot(hot_d, "red");
       xaxis();
       yaxis();
     } else {
-      /* load animation here */ ;
+      showloading();
     }
   }
 
@@ -87,7 +96,8 @@
     cold_d = differentiate(data.cold);
     hot_d = differentiate(data.hot);
     hfact = (wh - yzero) / hmax;
-    //document.getElementById("debug").innerHTML = cold_d + "<br>" + hot_d;
+    //dbg.innerHTML = "hmax=" + hmax + " hfact=" + hfact + "<br>"
+    //              + cold_d + "<br>" + hot_d;
     redraw();
   }
 
@@ -108,7 +118,7 @@
   }
 
   function resize() {
-    ww = window.innerWidth;
+    ww = window.innerWidth - 4;
     if (ww > window.innerHeight) ww = window.innerHeight;
     wh = ww / 2;
     canvas.width = ww;
@@ -144,7 +154,7 @@ br {
   clear: both;
 }
 div#currentvals {
-  width: 14em;
+  width: 18em;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 10px;
