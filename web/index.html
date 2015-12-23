@@ -151,11 +151,14 @@
     redraw();
   }
 
-  function sendquery(lo, hi) {
-    var url = "query.cgi";
+  function iso2qu(idate) {
+    return idate.replace("T", "+").replace("0Z", "");
+  }
 
-    if (lo && hi) url += "?lo=" + lo + "&" + hi;
-    else url = "query.cgi?lo=2015-12-19+00:00:00&hi=2015-12-20+00:00:00"; //FIX
+  function sendquery(lo, hi) {
+    var url = "query.cgi" + "?lo=" + iso2qu(lo) + "&" + iso2qu(hi);
+
+    //dbg.innerHTML = url;
     xmlhttp.onreadystatechange = function() {
       if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
         // dbg.innerHTML = xmlhttp.responseText;
@@ -179,12 +182,21 @@
   }
 
   function initialize() {
+    var tdy = new Date();
+    var tmr;
+
+    tdy.setMilliseconds(0);
+    tdy.setSeconds(0);
+    tdy.setMinutes(0);
+    tdy.setHours(0);
+    tmr = new Date(1*tdy + 86400000);
     dbg = document.getElementById("debug");
     canvas = document.getElementById("plot");
     ctx = canvas.getContext("2d");
-    xmlhttp = new XMLHttpRequest();
     resize();
-    sendquery();
+    
+    xmlhttp = new XMLHttpRequest();
+    sendquery(tdy.toISOString(), tmr.toISOString());
   }
 
   /* Set up */
