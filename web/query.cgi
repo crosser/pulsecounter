@@ -30,6 +30,7 @@ cgiMain = do
                                               , connectPassword = pass conf
                                               , connectDatabase = dbnm conf
                                               }
+  _ <- liftIO $ execute_ conn "set time_zone = '+00:00';";
   today <- liftIO getClockTime
   let tomorrow = addToClockTime (noTimeDiff {tdDay = 1}) today
       daystart x = (toUTCTime x) { ctHour = 0, ctMin = 0

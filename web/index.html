@@ -13,6 +13,11 @@
   var xzero = 20, yzero = 20;
   var cold_d = [], hot_d = [];
 
+  function showdate(utime) {
+    var dt = new Date(utime*1000);
+    return dt.toLocaleDateString() + " " + dt.toLocaleTimeString();
+  }
+
   function getcomb(lo, hi) {
     var comb = [], lb = [];
     var d = hi - lo;
@@ -142,6 +147,8 @@
       (data.current.hot / 100).toFixed(2);
     tmin = data.range.lo;
     tmax = data.range.hi;
+    dbg.innerHTML = "from " + tmin + " to " + tmax
+                  + "<br>from " + showdate(tmin) + " to " + showdate(tmax);
     /* differetiate() updates hmax */
     hmax = 0;
     cold_d = differentiate(data.cold);
@@ -156,7 +163,7 @@
   }
 
   function sendquery(lo, hi) {
-    var url = "query.cgi" + "?lo=" + iso2qu(lo) + "&" + iso2qu(hi);
+    var url = "query.cgi" + "?lo=" + iso2qu(lo) + "&hi=" + iso2qu(hi);
 
     //dbg.innerHTML = url;
     xmlhttp.onreadystatechange = function() {
