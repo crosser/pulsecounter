@@ -25,16 +25,16 @@
     var scl = Math.floor(d / ord);
     var inc, inc2, first, x, lb;
 
-    if (scl < 2) { inc = 0.1; inc2 = 0.5; }
-    else if (scl < 5) { inc = 0.2; inc2 = 1; }
-    else { inc = 0.5; inc2 = 2; }
+    if (scl < 2) { inc = 0.1; inc2 = 0.2; }
+    else if (scl < 5) { inc = 0.1; inc2 = 0.2; }
+    else { inc = 0.5; inc2 = 1; }
     inc *= ord;
     inc2 *= ord;
     first = (Math.floor(lo / inc) + 1) * inc;
-    for (x = 0; x < (d / inc) - 1.5; x++)
+    for (x = 0; x < (d / inc) - 1.2; x++)
       comb.push(first + inc * x);
     first = (Math.floor(lo / inc2) + 1) * inc2;
-    for (x = 0; x < (d / inc2) - 1.5; x++)
+    for (x = 0; x < (d / inc2) - 1.2; x++)
       lb.push(first + inc2 * x);
     //dbg.innerHTML = "ord=" + ord + "<br>inc=" + inc + "<br>"
     //              + comb + "<br>" + lb;
@@ -87,7 +87,7 @@
     ctx.textAlign = "right";
     ctx.fillText(0, px(tmin) - 2, py(0));
     for (i = 0; comb[1][i]; i++) {
-      ctx.fillText(comb[1][i], px(tmin) - 2, py(comb[1][i]));
+      ctx.fillText(comb[1][i].toFixed(1), px(tmin) - 2, py(comb[1][i]));
     }
     ctx.textAlign = "left";
     ctx.fillText("l/h", px(tmin) + 2, py(hmax) + 8);
