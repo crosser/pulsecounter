@@ -338,6 +338,7 @@ div#queries {
 }
 div.query {
   display: inline-block;
+  position: relative;
   width: 8em;
   height: 8em;
   border: solid 1px black;
@@ -345,9 +346,13 @@ div.query {
   cursor: pointer;
   vertical-align: middle;
 }
-span.query {
-  display: inline-block;
-  vertical-align: middle;   /* does not work for some reason */
+div.label {
+  display: block;
+  width: 100%;
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  vertical-align: middle;
 }
 body {
   margin: 0px;
@@ -365,12 +370,12 @@ body {
 <canvas id="plot" width="640" height = "320"></canvas>
 <br />
 <div id="queries">
- <div class="query" id="prevweek"><span class="query">PREVIOUS WEEK</span></div>
- <div class="query" id="beforeyesterday"><span class="query">DAY
-   BEFORE YESTERDAY</span></div>
- <div class="query" id="yesterday"><span class="query">YESTERDAY</span></div>
- <div class="query" id="today"><span class="query">TODAY</span></div>
- <div class="query" id="thisweek"><span class="query">THIS WEEK</span></div>
+ <div class="query" id="prevweek"><div class="label">PREVIOUS WEEK</div></div>
+ <div class="query" id="beforeyesterday"><div class="label">DAY
+   BEFORE YESTERDAY</div></div>
+ <div class="query" id="yesterday"><div class="label">YESTERDAY</div></div>
+ <div class="query" id="today"><div class="label">TODAY</div></div>
+ <div class="query" id="thisweek"><div class="label">THIS WEEK</div></div>
 </div>
 <br />
 <div id="debug"></div>
