@@ -5,7 +5,6 @@
 <head>
 <script>
   var dbg;
-  var xmlhttp;
   var canvas, ctx;
   var ww, wh;
   var hmax, hfact;
@@ -176,12 +175,9 @@
     redraw();
   }
 
-  function iso2qu(idate) {
-    return idate.replace("T", "+").replace("0Z", "");
-  }
-
-  function sendquery(lo, hi) {
-    var url = "query.cgi" + "?lo=" + iso2qu(lo) + "&hi=" + iso2qu(hi);
+  function sendreq(qstr) {
+    var url = "query.cgi" + qstr;
+    var xmlhttp = new XMLHttpRequest();
 
     //dbg.innerHTML = url;
     xmlhttp.onreadystatechange = function() {
@@ -195,6 +191,14 @@
     clearplot();
     showloading();
     xmlhttp.send();
+  }
+
+  function iso2qu(idate) {
+    return idate.replace("T", "+").replace("0Z", "");
+  }
+
+  function sendquery(lo, hi) {
+    return sendreq("?lo=" + iso2qu(lo) + "&hi=" + iso2qu(hi));
   }
 
   function resize() {
@@ -223,7 +227,6 @@
 
     wstart = new Date(1*tdy - 86400000 * (dow + 7));
     wend = new Date(1*wstart + 86400000 * 7);
-    xmlhttp = new XMLHttpRequest();
     sendquery(wstart.toISOString(), wend.toISOString());
   }
 
@@ -234,7 +237,6 @@
 
     wstart = new Date(1*tdy - 86400000 * dow);
     wend = new Date(1*wstart + 86400000 * 7);
-    xmlhttp = new XMLHttpRequest();
     sendquery(wstart.toISOString(), wend.toISOString());
   }
 
@@ -242,30 +244,30 @@
     var tdy = daystart(new Date());
     var ytd = new Date(1*tdy - 86400000);
     var byd = new Date(1*ytd - 86400000);
-    xmlhttp = new XMLHttpRequest();
     sendquery(byd.toISOString(), ytd.toISOString());
   }
 
   function yesterday() {
     var tdy = daystart(new Date());
     var ytd = new Date(1*tdy - 86400000);
-    xmlhttp = new XMLHttpRequest();
     sendquery(ytd.toISOString(), tdy.toISOString());
   }
 
   function today() {
     var tdy = daystart(new Date());
     var tmr = new Date(1*tdy + 86400000);
-    xmlhttp = new XMLHttpRequest();
     sendquery(tdy.toISOString(), tmr.toISOString());
   }
 
   function initialize() {
+    var qstr = window.location.search;
+
     dbg = document.getElementById("debug");
     canvas = document.getElementById("plot");
     ctx = canvas.getContext("2d");
     resize();
-    today();
+    if (qstr) sendreq(qstr);
+    else today();
     
     document.getElementById("today").onclick = today;
     document.getElementById("yesterday").onclick = yesterday;
@@ -275,13 +277,8 @@
   }
 
   /* Set up */
-  if(window.attachEvent) {
-    window.attachEvent('onload', initialize);
-    window.attachEvent('onresize', resize);
-  } else {
-    window.onload = initialize;
-    window.onresize = resize;
-  }
+  window.onload = initialize;
+  window.onresize = resize;
 </script>
 <style>
 @font-face {
@@ -342,6 +339,7 @@ div.query {
   width: 8em;
   height: 8em;
   border: solid 1px black;
+  border-radius: 1em;
   background-color: lightgray;
   cursor: pointer;
 }
