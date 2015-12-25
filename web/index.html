@@ -4,7 +4,7 @@
 <html xml:lang="en" lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <script>
-  var dbg;
+  var dbg, errordiv;
   var canvas, ctx;
   var ww, wh;
   var hmax, hfact;
@@ -220,6 +220,8 @@
   }
 
   function redraw() {
+    errordiv.style.visibility = "hidden";
+    errordiv.innerHTML = "";
     clearplot();
     if (cold_d.length || hot_d.length) {
       tfact = (ww - xzero) / (tmax - tmin);
@@ -263,11 +265,16 @@
 
     //dbg.innerHTML = url;
     xmlhttp.onreadystatechange = function() {
-      if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-        // dbg.innerHTML = xmlhttp.responseText;
-        var myData = JSON.parse(xmlhttp.responseText);
-        gotdata(myData);
-      }
+      if (xmlhttp.readyState == 4)
+        if (xmlhttp.status == 200) {
+          // dbg.innerHTML = xmlhttp.responseText;
+          var myData = JSON.parse(xmlhttp.responseText);
+          gotdata(myData);
+        } else {
+          errordiv.style.visibility = "visible";
+          errordiv.style.display = "block";
+          errordiv.innerHTML = xmlhttp.responseText;
+        }
     }
     xmlhttp.open("GET", url, true);
     clearplot();
@@ -345,6 +352,7 @@
     var qstr = window.location.search;
 
     dbg = document.getElementById("debug");
+    errordiv = document.getElementById("errormsg");
     canvas = document.getElementById("plot");
     ctx = canvas.getContext("2d");
     resize();
@@ -417,6 +425,11 @@ canvas#plot {
   height: 320px;
   /* border: solid 1px black; */
 }
+div#errormsg {
+  visibility: hidden;
+  color: red;
+  text-align: center;
+}
 div#queries {
   margin-left: auto;
   margin-right: auto;
@@ -454,6 +467,8 @@ body {
 </div>
 <br />
 <canvas id="plot" width="640" height = "320"></canvas>
+<br />
+<div id="errormsg"></div>
 <br />
 <div id="totalvals">
   Total for the period (l)
