@@ -9,7 +9,7 @@
   var ww, wh;
   var hmax, hfact;
   var tmin, tmax, tfact;
-  var xzero = 40, yzero = 24;
+  var xzero = 40, yzero = 48;
   var cold_d = [], hot_d = [];
 
   function showdate(utime) {
@@ -17,7 +17,100 @@
     return dt.toLocaleDateString() + " " + dt.toLocaleTimeString();
   }
 
-  function getcomb(lo, hi) {
+  function px(x) {
+    return xzero + ((x - tmin) * tfact);
+  }
+
+  function py(y) { return wh - yzero - (y * hfact);
+  }
+
+  const dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const mn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  function getcombx(lo, hi) {
+    var comb = [], lb = [];
+    var trange = tmax - tmin;
+    var inc, inc2, base, t, dt;
+    var label = function(t) { return "<<" + t.toFixed(1) + ">>"; }
+    function tohour(t) { var dt = new Date(t*1000); return dt.getHours(); }
+    function todow(t) { var dt = new Date(t*1000); return dow[dt.getDay()]; }
+    function todom(t) { var dt = new Date(t*1000); return dt.getDate(); }
+    function tomonth(t) { var dt = new Date(t*1000); return mn[dt.getMonth()]; }
+
+    if (trange < 172800) { /* two days -> one hour */
+      inc = 3600;
+      inc2 = 21600;
+      label = tohour;
+    }
+    else if (trange < 864000) { /* 10 days -> six hours */
+      inc = 21600;
+      inc2 = 86400;
+      label = todow;
+    }
+    else if (trange < 2678400) { /* 31 days -> 1 day */
+      inc = 86400;
+      inc2 = 86400;
+      label = todom;
+    }
+    else { /* ~ one month */
+      /* TODO: make this a separate case with loop over months rather than
+         fixed number of seconds. */
+      inc = 2592000;
+      inc2 = 2592000;
+      label = tomonth;
+    }
+
+    dt = new Date(tmin*1000);
+    base = (Math.floor(tmin / inc) + 1) * inc + 60 * dt.getTimezoneOffset();
+    for (t = base; t < tmax; t += inc)
+      comb.push(t);
+    base = (Math.floor(tmin / inc2) + 1) * inc2 + 60 * dt.getTimezoneOffset();
+    for (t = base; t < tmax; t += inc2)
+      lb.push([t, label(t)]);
+    //dbg.innerHTML = "ord=" + ord + "<br>inc=" + inc + "<br>"
+    //              + comb + "<br>" + lb;
+    return [comb, lb];
+  }
+
+  function xaxis() {
+    var comb = getcombx(0, hmax);
+    var i;
+
+    ctx.beginPath();
+    for (i = 0; comb[0][i]; i++) {
+      ctx.moveTo(px(comb[0][i]), py(0) + 5);
+      ctx.lineTo(px(comb[0][i]), py(0));
+    }
+    ctx.strokeStyle = "gray";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(px(tmin), py(0));
+    ctx.lineTo(px(tmax), py(0));
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+
+    ctx.fillStyle = "black";
+    ctx.font = "bold 16px Courier";
+    ctx.textAlign = "center";
+    ctx.beginPath();
+    for (i = 0; comb[1][i]; i++) {
+      ctx.fillText(comb[1][i][1], px(comb[1][i][0]), py(0) + 20);
+      ctx.moveTo(px(comb[1][i][0]), py(0) + 5);
+      ctx.lineTo(px(comb[1][i][0]), py(0));
+    }
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+
+    ctx.fillStyle = "black";
+    ctx.textAlign = "left";
+    ctx.fillText(showdate(tmin), px(tmin), py(0) + 40);
+    ctx.textAlign = "right";
+    ctx.fillText(showdate(tmax), px(tmax), py(0) + 40);
+  }
+
+  function getcomby(lo, hi) {
     var comb = [], lb = [];
     var d = hi - lo;
     var ord = Math.pow(10, Math.floor(Math.log10(d)));
@@ -40,31 +133,8 @@
     return [comb, lb];
   }
 
-  function px(x) {
-    return xzero + ((x - tmin) * tfact);
-  }
-
-  function py(y) {
-    return wh - yzero - (y * hfact);
-  }
-
-  function xaxis() {
-    ctx.beginPath();
-    ctx.moveTo(px(tmin), py(0));
-    ctx.lineTo(px(tmax), py(0));
-    ctx.strokeStyle = "black";
-    ctx.stroke();
-
-    ctx.fillStyle = "black";
-    ctx.font = "bold 16px Courier";
-    ctx.textAlign = "left";
-    ctx.fillText(showdate(tmin), px(tmin), py(0) + 20);
-    ctx.textAlign = "right";
-    ctx.fillText(showdate(tmax), px(tmax), py(0) + 20);
-  }
-
   function yaxis() {
-    var comb = getcomb(0, hmax);
+    var comb = getcomby(0, hmax);
     var i;
 
     ctx.beginPath();
@@ -85,9 +155,15 @@
     ctx.font = "bold 16px Courier";
     ctx.textAlign = "right";
     ctx.fillText(0, px(tmin) - 6, py(0));
+    ctx.beginPath();
     for (i = 0; comb[1][i]; i++) {
       ctx.fillText(comb[1][i].toFixed(1), px(tmin) - 6, py(comb[1][i]));
+      ctx.moveTo(px(tmin) - 5, py(comb[1][i]));
+      ctx.lineTo(px(tmax), py(comb[1][i]));
     }
+    ctx.strokeStyle = "gray";
+    ctx.stroke();
+
     ctx.textAlign = "left";
     ctx.fillText("l/min", px(tmin) + 4, py(hmax) + 12);
   }
