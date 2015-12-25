@@ -241,10 +241,14 @@
     document.getElementById("curhot").innerHTML =
       (data.current.hot / 100).toFixed(2);
 
-    document.getElementById("totcold").innerHTML =
-      ((data.cold[data.cold.length - 1][1] - data.cold[0][1]) * 10);
-    document.getElementById("tothot").innerHTML =
-      ((data.hot[data.hot.length - 1][1] - data.hot[0][1]) * 10);
+    if (data.cold.length)
+      document.getElementById("totcold").innerHTML =
+        ((data.cold[data.cold.length - 1][1] - data.cold[0][1]) * 10);
+    else document.getElementById("totcold").innerHTML = "0";
+    if (data.hot.length)
+      document.getElementById("tothot").innerHTML =
+        ((data.hot[data.hot.length - 1][1] - data.hot[0][1]) * 10);
+    else document.getElementById("tothot").innerHTML = "0";
 
     tmin = data.range.lo;
     tmax = data.range.hi;
