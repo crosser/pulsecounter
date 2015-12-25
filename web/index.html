@@ -234,10 +234,16 @@
   }
 
   function gotdata(data) {
-    document.getElementById("cold").innerHTML =
+    document.getElementById("curcold").innerHTML =
       (data.current.cold / 100).toFixed(2);
-    document.getElementById("hot").innerHTML =
+    document.getElementById("curhot").innerHTML =
       (data.current.hot / 100).toFixed(2);
+
+    document.getElementById("totcold").innerHTML =
+      ((data.cold[data.cold.length - 1][1] - data.cold[0][1]) * 10);
+    document.getElementById("tothot").innerHTML =
+      ((data.hot[data.hot.length - 1][1] - data.hot[0][1]) * 10);
+
     tmin = data.range.lo;
     tmax = data.range.hi;
     //dbg.innerHTML = "from " + tmin + " to " + tmax
@@ -381,17 +387,25 @@ div#currentvals {
   text-align: center;
   font-size: 150%;
 }
+div#totalvals {
+  width: 18em;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 100%;
+}
 div.current {
   position: relative;
   padding: 0.2em;
   border: solid 1px black;
   margin: 0.2em;
 }
-div#cold {
+div.cold {
   float: left;
   background-color: #d0e0ff;
 }
-div#hot {
+div.hot {
   float: right;
   background-color: #ffd0e0;
 }
@@ -434,12 +448,18 @@ body {
 </head><body>
 <h1>WATER METERS</h1>
 <div id="currentvals">
-  Current Values
-  <div class="current" id="cold">cold</div>
-  <div class="current" id="hot">hot</div>
+  Current Readings (m<sup>3</sup>)
+  <div class="current cold" id="curcold">cold</div>
+  <div class="current hot" id="curhot">hot</div>
 </div>
 <br />
 <canvas id="plot" width="640" height = "320"></canvas>
+<br />
+<div id="totalvals">
+  Total for the period (l)
+  <div class="current cold" id="totcold">cold</div>
+  <div class="current hot" id="tothot">hot</div>
+</div>
 <br />
 <div id="queries">
  <div class="query" id="prevweek"><div class="label">PREVIOUS WEEK</div></div>
