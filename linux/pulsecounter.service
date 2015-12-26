@@ -1,0 +1,10 @@
+[Unit]
+Description=Water meter pulse counter
+
+[Service]
+Type=forking
+Environment="SENSOR_MAC=xx:xx:xx:xx:xx:xx"
+ExecStart=/usr/local/bin/pulsecounter -d -b ${SENSOR_MAC}
+
+[Install]
+WantedBy=multi-user.target
