@@ -205,3 +205,33 @@ NUCLEO-L053R8 (STM32L053R8T6)
 http://www.st.com/web/en/catalog/tools/FM116/SC959/SS1532/LN1847/PF260001
 X-NUCLEO-IDB05A1 (SPBTLE-RF)
 http://www.st.com/web/catalog/tools/FM146/CL2167/SC2006/LN1988/PF262191
+
+===================
+Apparent hardware glitch:
+
+| 2015-12-28 05:48:47 |    95 |
+| 2015-12-28 06:19:15 |    96 |
+| 2015-12-28 06:22:01 |    97 |
+| 2015-12-28 06:24:48 |    98 |
+| 2015-12-28 06:27:35 |    99 |
+| 2015-12-28 06:30:23 |   100 |
+| 2015-12-28 06:33:10 |   101 |
+| 2015-12-28 06:35:57 |   102 |
+>>
+| 2015-12-28 06:56:49 |   103 |
+| 2015-12-28 06:56:52 |   104 |
+| 2015-12-28 06:56:54 |   105 |
+| 2015-12-28 06:56:56 |   106 |
+| 2015-12-28 06:56:57 |   107 |
+| 2015-12-28 06:56:59 |   108 |
+| 2015-12-28 06:57:01 |   109 |
+| 2015-12-28 06:57:02 |   110 |
+<<
+| 2015-12-28 09:34:24 |   111 |
+| 2015-12-28 09:35:11 |   112 |
+| 2015-12-28 18:53:29 |   113 |
+
+selected eight lines are bogus. Mechanical counter reading is less by
+eight than counted by the software. Apparently triggered by high flow
+of hot water (still definitely not 500 l/min high!).
+
