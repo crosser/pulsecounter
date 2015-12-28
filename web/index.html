@@ -9,7 +9,7 @@
   var ww, wh;
   var hmax, hfact;
   var tmin, tmax, tfact;
-  var xzero = 40, yzero = 48;
+  var xzero = 60, yzero = 48;
   var cold_d = [], hot_d = [];
 
   function showdate(utime) {
@@ -28,10 +28,10 @@
   const mn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  function getcombx(lo, hi) {
+  function getcombx(tmin, tmax) {
     var comb = [], lb = [];
     var trange = tmax - tmin;
-    var inc, inc2, base, t, dt;
+    var inc, inc2, base, base2, t, dt, zoff;
     var label = function(t) { return "<<" + t.toFixed(1) + ">>"; }
     function tohour(t) { var dt = new Date(t*1000); return dt.getHours(); }
     function todow(t) { var dt = new Date(t*1000); return dow[dt.getDay()]; }
@@ -62,19 +62,22 @@
     }
 
     dt = new Date(tmin*1000);
-    base = (Math.floor(tmin / inc) + 1) * inc + 60 * dt.getTimezoneOffset();
+    zoff = 60 * dt.getTimezoneOffset();
+    base = (Math.floor((tmin - zoff - 1) / inc) + 1) * inc + zoff;
     for (t = base; t < tmax; t += inc)
       comb.push(t);
-    base = (Math.floor(tmin / inc2) + 1) * inc2 + 60 * dt.getTimezoneOffset();
-    for (t = base; t < tmax; t += inc2)
+    base2 = (Math.floor((tmin - zoff - 1) / inc2) + 1) * inc2 + zoff;
+    for (t = base2; t < tmax; t += inc2)
       lb.push([t, label(t)]);
-    //dbg.innerHTML = "ord=" + ord + "<br>inc=" + inc + "<br>"
+    //dbg.innerHTML = "inc=" + inc + "<br>inc2=" + inc2 + "<br>"
+    //              + "tmin=" + tmin + " tmax=" + tmax + "<br>"
+    //              + "base=" + base + " base2=" + base2 + "<br>"
     //              + comb + "<br>" + lb;
     return [comb, lb];
   }
 
   function xaxis() {
-    var comb = getcombx(0, hmax);
+    var comb = getcombx(tmin, tmax);
     var i;
 
     ctx.beginPath();
