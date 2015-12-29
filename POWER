@@ -1,0 +1,24 @@
+Some power drain figures for components:
+
+MSP430:
+
+Operating at 1MHz			330 uA
+Low power 0				 67 uA
+Low power 4				 <1 uA
+
+Schmitt-Trigger Inputs:
+
+High-impedance leakage:			 50 uA max (60 KOhm resistance)
+Internal pullup/down:			 60-85-150 uA (20-35-50 KOhm) per pin
+
+Two inputs that are opened ~.8 of the time and closed ~.2 of the time:
+100*.8 + 200*.2 = 120 uA
+
+Together with the CPU in LP0:
+120 + 70 = 190 uA
+
+CC2541:
+Transmit or recieve:			 15 ma
+Power mode 1				270 uA
+Power mode 2				  1 uA
+
