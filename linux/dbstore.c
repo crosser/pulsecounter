@@ -104,7 +104,7 @@ int dbstore(uint8_t which, uint32_t val)
 		if (row && *row) prev_val = atoi(*row);
 		mysql_free_result(result);
 	}
-	if (val <= prev_val) {
+	if (val < prev_val) {
 		snprintf(statement, sizeof(statement),
 			 "insert into %sadj values (\"%s\",%u);\n",
 			 table, tstr, prev_val);
