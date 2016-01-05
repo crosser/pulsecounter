@@ -77,11 +77,12 @@ int dbstore(uint8_t which, uint32_t val)
 	int rc = 0;
 	struct tm tm;
 	char buf[64];
-	char tstr[32];
+	char tstr[32], prevtstr[32];
 	char *table = (which == 1) ? "cold" : "hot";
 	char statement[64];
 	MYSQL_RES *result;
 	uint32_t prev_val = 0;
+	int bogus = 0;
 
 	t = time(NULL);
 	(void)gmtime_r(&t, &tm);
@@ -92,7 +93,7 @@ int dbstore(uint8_t which, uint32_t val)
 		return 1;
 	}
 	mysql_autocommit(&mysql, FALSE);
-	/* ======== */
+	/* ==== Was the sensor reset since last measurement? ==== */
 	snprintf(statement, sizeof(statement),
 		 "select value from %scnt order by timestamp desc limit 1;\n",
 		 table);
@@ -113,6 +114,56 @@ int dbstore(uint8_t which, uint32_t val)
 			g_warning("mysql \"%s\" error: %s\n",
 					statement, mysql_error(&mysql));
 	}
+	/* ==== Is this a part of a series of bogus events? ==== */
+	snprintf(statement, sizeof(statement),
+		 "select timestamp from %scnt "
+		 "where timestamp > subtime(\"%s\", \"0 0:0:10\") "
+		 "order by timestamp desc;\n",
+		 table, tstr);
+	if ((rc = mysql_query(&mysql, statement)))
+		g_warning("mysql \"%s\" error: %s\n",
+				statement, mysql_error(&mysql));
+	else if ((result = mysql_store_result(&mysql))){
+		my_ulonglong rows = mysql_num_rows(result);
+
+		if (rows > 0) {
+			bogus = 1;
+			MYSQL_ROW row = mysql_fetch_row(result);
+			if (row && *row) {
+				strncpy(prevtstr, *row, sizeof(prevtstr));
+			} else {
+				g_warning("mysql_fetch_row after \"%s\": "
+					  "no result despite rows=%llu\n",
+					  statement, rows);
+				bogus = -1;
+			}
+		}
+		if (rows == 1)
+			bogus = 2;
+
+		mysql_free_result(result);
+	}
+	if (bogus > 0) {
+		snprintf(statement, sizeof(statement),
+			 "insert into %sadj values (\"%s\", -1);\n",
+			 table, tstr);
+		g_info("%s %u at \"%s\" bogus, %s",
+			table, val, tstr, statement);
+		if ((rc = mysql_query(&mysql, statement)))
+			g_warning("mysql \"%s\" error: %s\n",
+					statement, mysql_error(&mysql));
+	}
+	if (bogus > 1) {
+		snprintf(statement, sizeof(statement),
+			 "insert into %sadj values (\"%s\", -1);\n",
+			 table, prevtstr);
+		g_info("previous %s at \"%s\" was bogus too, %s",
+			table, prevtstr, statement);
+		if ((rc = mysql_query(&mysql, statement)))
+			g_warning("mysql \"%s\" error: %s\n",
+					statement, mysql_error(&mysql));
+	}
+	/* ==== Update the counter table regardless ==== */
 	snprintf(statement, sizeof(statement),
 		 "insert into %scnt values (\"%s\",%u);\n",
 		 table, tstr, val);
