@@ -79,7 +79,7 @@ int dbstore(uint8_t which, uint32_t val)
 	char buf[64];
 	char tstr[32], prevtstr[32];
 	char *table = (which == 1) ? "cold" : "hot";
-	char statement[64];
+	char statement[256];
 	MYSQL_RES *result;
 	uint32_t prev_val = 0;
 	int bogus = 0;
