@@ -57,6 +57,14 @@ mysql:
 +---------------------+-------+
 6 rows in set (0.00 sec)
 
+2016-01-08:
+
+Hey, turns out my default sqlite verstion 2.8.17 cannot handle this,
+but sqlite 3 works like a charm.
+[#include test.sql]
+I may be replacing the backend. Requires different linux/dbstore.c
+and web/query.cgi rewritten to use HDBC.sqlite3.
+
 2015-12-20:
 
 After some playing with it, I think it is a mistake. One of my assumed
