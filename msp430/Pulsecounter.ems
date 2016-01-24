@@ -11,4 +11,12 @@ schema Pulsecounter {
         indicator
     };
 
+    int32 coldJitter {
+        indicator
+    };
+
+    int32 hotJitter {
+        indicator
+    };
+
 };

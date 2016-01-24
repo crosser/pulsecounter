@@ -93,7 +93,51 @@ static Hal_Handler appGpioHandler;
 static volatile uint16_t handlerEvents = 0;
 static uint16_t clockTick = 0;
 static Hal_Handler handlerTab[NUM_HANDLERS];
+static uint32_t gpioCount[3];
+static bool timerActive[3] = {false, false, false};
+static uint16_t timerPoint[3];
 
+/* -------- INTERNAL FUNCTIONS -------- */
+
+static void gpioHandler(uint8_t id) {
+    uint8_t i;
+    uint16_t now, left;
+
+    if (timerActive[id])
+        return;
+    timerActive[id] = true;
+    now = TA1R;
+    timerPoint[id] = now + ACLK_TICKS_PER_SECOND; // One second ahead
+    left = ACLK_TICKS_PER_SECOND;
+    for (i = 0; i < 3; i++)
+        if (timerActive[i] && (timerPoint[i] - now) < left) {
+            left = timerPoint[i] - now;
+        }
+    TA1CCR0 = now + left;
+    TA1CCTL0 = CCIE;
+}
+
+static void tickHandler(uint16_t clock) {
+    uint8_t i;
+
+    for (i = 0; i < 3; i++)
+        if (timerActive[i] && timerPoint[i] == clock) {
+            uint32_t count = Hal_gpioCount(i);
+
+            if (count) {
+                ; // update timer; call jitter handler
+            } else {
+                ; // clear timer; call app gpio handler
+            }
+        }
+    // if all timers are unset, disable ticker.
+}
+
+static void postEvent(uint8_t handlerId) {
+    uint8_t key = Em_Hal_lock();
+    handlerEvents |= 1 << handlerId;
+    Em_Hal_unlock(key);
+}
 
 /* -------- APP-HAL INTERFACE -------- */
 
@@ -108,6 +152,7 @@ void Hal_gpioEnable(Hal_Handler handler) {
         Hal_delay(100);
         (P1IFG &= ~mask, P1IE |= mask);
     }
+    handlerTab[TICK_HANDLER_ID] = tickHandler;
 }
 
 void Hal_connected(void) {
@@ -194,12 +239,15 @@ void Hal_idleLoop(void) {
             uint8_t id;
             for (id = 0, mask = 0x1; id < NUM_HANDLERS; id++, mask <<= 1) {
                 if ((events & mask) && handlerTab[id]) {
-                    handlerTab[id](id);
+                    if (id == TICK_HANDLER_ID)
+                        handlerTab[id](TA1R);
+                    else
+                        handlerTab[id](id);
                 }
             }
         }
         else {          // await more events
-            SLEEP();
+            SLEEP();    // this also enables interrupts
         }
     }
 }
@@ -236,17 +284,27 @@ void Hal_redLedToggle(void) {
     RED_LED_TOGGLE();
 }
 
-void Hal_tickStart(uint16_t msecs, Hal_Handler handler) {
+uint16_t Hal_tickStart(uint16_t msecs, void (*handler)(uint16_t clock)) {
     handlerTab[TICK_HANDLER_ID] = handler;
-    clockTick = (ACLK_TICKS_PER_SECOND * msecs) / 1000;
-    TA1CCR0 = TA1R + clockTick;                 // Set the CCR0 interrupt for msecs from now.
+    uint16_t clockTick = (ACLK_TICKS_PER_SECOND * msecs) / 1000;
+    uint16_t then = TA1R + clockTick;
+    TA1CCR0 = then;               // Set the CCR0 interrupt for msecs from now.
     TA1CCTL0 = CCIE;                            // Enable the CCR0 interrupt
+    return then;
 }
 
 void Hal_tickStop(void) {
     handlerTab[TICK_HANDLER_ID] = 0;
     TA1CCR0 = 0;
     TA1CCTL0 = 0;
+}
+
+uint32_t Hal_gpioCount(uint8_t id) {
+    DINT();
+    uint32_t count = gpioCount[id];
+    gpioCount[id] = 0;
+    EINT();
+    return count;
 }
 
 /* -------- SRT-HAL INTERFACE -------- */
@@ -291,24 +349,6 @@ void Em_Hal_watchOn(void) {
     UART_WATCH_ENABLE();
 }
 
-
-/* -------- INTERNAL FUNCTIONS -------- */
-
-static void gpioHandler(uint8_t id) {
-    uint16_t mask = BIT3 << id;
-
-    Hal_delay(GPIO_DEBOUNCE_MSECS);
-    if (GPIO_LOW(mask) && appGpioHandler)
-        appGpioHandler(id);
-    GPIO_ENABLE(mask);
-}
-
-static void postEvent(uint8_t handlerId) {
-    uint8_t key = Em_Hal_lock();
-    handlerEvents |= 1 << handlerId;
-    Em_Hal_unlock(key);
-}
-
 /* -------- INTERRUPT SERVICE ROUTINES -------- */
 
 #ifdef __GNUC__
@@ -323,8 +363,8 @@ INTERRUPT void gpioIsr(void) {
 
     for (id = 0, mask = BIT3; id < 3; id++, mask <<= 1)
         if (GPIO_FIRED(mask)) {
+            gpioCount[id]++;
             postEvent(id);
-            GPIO_DISABLE(mask);
         }
     WAKEUP();
 }

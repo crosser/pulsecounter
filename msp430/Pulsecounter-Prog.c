@@ -2,7 +2,7 @@
 #include "Hal.h"
 
 static void gpioHandler(uint8_t id);
-static void tickHandler(void);
+static void tickHandler(uint16_t clock);
 static int32_t cold = 0;
 static int32_t hot  = 0;
 static bool connected = false;
@@ -61,7 +61,7 @@ static void gpioHandler(uint8_t id) {
     }
 }
 
-static void tickHandler(void) {
+static void tickHandler(uint16_t clock) {
     uint8_t i;
 
     Hal_tickStop();
@@ -111,4 +111,12 @@ void Pulsecounter_coldTick_fetch(Pulsecounter_coldTick_t* const output) {
 
 void Pulsecounter_hotTick_fetch(Pulsecounter_hotTick_t* const output) {
     *output = hot;
+}
+
+void Pulsecounter_coldJitter_fetch(Pulsecounter_coldJitter_t* output) {
+    *output = Hal_gpioCount(1);
+}
+
+void Pulsecounter_hotJitter_fetch(Pulsecounter_hotJitter_t* output) {
+    *output = Hal_gpioCount(2);
 }

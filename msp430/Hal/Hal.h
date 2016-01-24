@@ -227,14 +227,31 @@ extern void Hal_redLedToggle(void);
  *   tickHandler - the address of the user's tick handler that will be called
  *
  * Returns:
- *   None
+ *   Future clock when handler will be called
  *
  * Side Effects:
  *   tickhandler called by the idle loop
  *
  **/
-extern void Hal_tickStart(uint16_t msecs, Hal_Handler Handler);
+extern uint16_t Hal_tickStart(uint16_t msecs, void (*handler)(uint16_t clock));
 extern void Hal_tickStop(void);
+
+/**
+ * --------- Hal_gpioCount ---------
+ *
+ * Returns the number of interrups encounted on gpio `id`
+ *
+ * Inputs:
+ *   id if the gpio (0-2 for gpio 3-5)
+ *
+ * Returns:
+ *   Counted interrupts
+ *
+ * Side Effects:
+ *   Resets the accumulator (counting restarts from zero).
+ *
+ **/
+extern uint32_t Hal_gpioCount(uint8_t id);
 
 #ifdef __cplusplus
 }
