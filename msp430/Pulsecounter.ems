@@ -11,12 +11,4 @@ schema Pulsecounter {
         indicator
     };
 
-    int32 coldSet {
-        writeonly
-    };
-
-    int32 hotSet {
-        writeonly
-    };
-
 };
