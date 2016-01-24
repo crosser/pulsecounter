@@ -4,7 +4,6 @@
  * This example HAL is intentionally simple.  The implementation is limited to:
  *
  * BUTTON -- a single button that when pressed will cause an interrupt.
- * DEBUG -- two debug GPIOs that are available as outputs from the EAP and under user control.
  * DELAY -- a delay routine that can delay by n milliseconds.
  * INIT -- set the hardware up to its initial state
  * LED -- a user LED that is available for application control.
@@ -63,63 +62,6 @@ extern void Hal_gpioEnable(Hal_Handler handler);
  *
  **/
 extern void Hal_connected(void);
-/**
- * --------- Hal_debugOff ---------
- *
- * Turns the selected DEBUG line off.
- *
- * The two DEBUG lines are output GPIOs that are available to the user for
- * debug purposes.
- *
- * Inputs:
- *   line - the index value of the debug line to turn off
- *
- * Returns:
- *   None
- *
- * Side Effects:
- *   DEBUG line off.
- *
- **/
-extern void Hal_debugOff(uint8_t line);
-/**
- * --------- Hal_debugOn ---------
- *
- * Turns the selected DEBUG line on.
- *
- * The two DEBUG lines are output GPIOs that are available to the user for
- * debug purposes.
- *
- * Inputs:
- *   line - the index value of the debug line to turn on
- *
- * Returns:
- *   None
- *
- * Side Effects:
- *   DEBUG line on.
- *
- **/
-extern void Hal_debugOn(uint8_t line);
-/**
- * --------- Hal_debugPulse ---------
- *
- * Emits a pulse on the selected DEBUG line.
- *
- * The two DEBUG lines are output GPIOs that are available to the user for
- * debug purposes.
- *
- * Inputs:
- *   line - the index value of the debug line to emit a pulse
- *
- * Returns:
- *   None
- *
- * Side Effects:
- *   DEBUG line turns on then off.
- *
- **/
-extern void Hal_debugPulse(uint8_t line);
 /**
  * --------- Hal_delay ---------
  *

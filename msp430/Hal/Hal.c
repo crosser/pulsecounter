@@ -29,14 +29,6 @@
 #define GPIO_LOW(mask)              (!(P1IN & mask))
 #define GPIO_DEBOUNCE_MSECS         100
 
-#define DEBUG1_CONFIG()             (P2DIR |= BIT3)
-#define DEBUG1_ON()                 (P2OUT |= BIT3)
-#define DEBUG1_OFF()                (P2OUT &= ~BIT3)
-
-#define DEBUG2_CONFIG()             (P2DIR |= BIT4)
-#define DEBUG2_ON()                 (P2OUT |= BIT4)
-#define DEBUG2_OFF()                (P2OUT &= ~BIT4)
-
 #define EAP_RX_BUF                  UCA0RXBUF
 #define EAP_TX_BUF                  UCA0TXBUF
 
@@ -121,38 +113,6 @@ void Hal_gpioEnable(Hal_Handler handler) {
 void Hal_connected(void) {
 }
 
-void Hal_debugOn(uint8_t line) {
-    switch (line) {
-    case 1:
-        DEBUG1_ON();
-        break;
-    case 2:
-        DEBUG2_ON();
-    }
-}
-
-void Hal_debugOff(uint8_t line) {
-    switch (line) {
-    case 1:
-        DEBUG1_OFF();
-        break;
-    case 2:
-        DEBUG2_OFF();
-    }
-}
-
-void Hal_debugPulse(uint8_t line) {
-    switch (line) {
-    case 1:
-        DEBUG1_ON();
-        DEBUG1_OFF();
-        break;
-    case 2:
-        DEBUG2_ON();
-        DEBUG2_OFF();
-    }
-}
-
 void Hal_delay(uint16_t msecs) {
     while (msecs--) {
         __delay_cycles(MCLK_TICKS_PER_MS);
@@ -190,13 +150,6 @@ void Hal_init(void) {
     GREEN_LED_OFF();
     RED_LED_CONFIG();
     RED_LED_OFF();
-
-    /* setup debug pins */
-
-    DEBUG1_CONFIG(); DEBUG1_OFF();
-    DEBUG2_CONFIG(); DEBUG2_OFF();
-
-    DEBUG1_ON(); DEBUG1_OFF();
 
     /* setup TimerA1 */
     TA1CTL = TASSEL_1 + MC_2;           // ACLK, Continuous mode
