@@ -46,7 +46,7 @@ typedef void (*Hal_Handler)(uint8_t id);
  *   BUTTON interrupt enabled
  *
  **/
-extern void Hal_gpioEnable(Hal_Handler handler);
+extern void Hal_gpioEnable(Hal_Handler handler, void (*jhandler)(uint8_t id, uint32_t count));
 /**
  * --------- Hal_connected ---------
  *
@@ -235,23 +235,6 @@ extern void Hal_redLedToggle(void);
  **/
 extern uint16_t Hal_tickStart(uint16_t msecs, void (*handler)(uint16_t clock));
 extern void Hal_tickStop(void);
-
-/**
- * --------- Hal_gpioCount ---------
- *
- * Returns the number of interrups encounted on gpio `id`
- *
- * Inputs:
- *   id if the gpio (0-2 for gpio 3-5)
- *
- * Returns:
- *   Counted interrupts
- *
- * Side Effects:
- *   Resets the accumulator (counting restarts from zero).
- *
- **/
-extern uint32_t Hal_gpioCount(uint8_t id);
 
 #ifdef __cplusplus
 }

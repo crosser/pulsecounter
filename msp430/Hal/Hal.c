@@ -90,6 +90,7 @@ static void gpioHandler(uint8_t id);
 static void postEvent(uint8_t handlerId);
 
 static Hal_Handler appGpioHandler;
+static void (*appJitterHandler)(uint8_t id, uint16_t count);
 static volatile uint16_t handlerEvents = 0;
 static uint16_t clockTick = 0;
 static Hal_Handler handlerTab[NUM_HANDLERS];
@@ -99,15 +100,22 @@ static uint16_t timerPoint[3];
 
 /* -------- INTERNAL FUNCTIONS -------- */
 
-static void gpioHandler(uint8_t id) {
+static uint32_t getCount(uint8_t id) {
+    DINT();
+    uint32_t count = gpioCount[id];
+    gpioCount[id] = 0;
+    EINT();
+    return count;
+}
+
+static void setTimer(uint8_t id, uint16_t delay) {
     uint8_t i;
     uint16_t now, left;
 
-    if (timerActive[id])
-        return;
     timerActive[id] = true;
+    // enable clock if it was disabled to save power?
     now = TA1R;
-    timerPoint[id] = now + ACLK_TICKS_PER_SECOND; // One second ahead
+    timerPoint[id] = now + delay;
     left = ACLK_TICKS_PER_SECOND;
     for (i = 0; i < 3; i++)
         if (timerActive[i] && (timerPoint[i] - now) < left) {
@@ -117,17 +125,39 @@ static void gpioHandler(uint8_t id) {
     TA1CCTL0 = CCIE;
 }
 
+static void clearTimer(uint8_t id) {
+    uint8_t i;
+    bool keep = false;
+
+    timerActive[id] = false;
+    for (i = 0; i < 3; i++)
+        if (timerActive[i]) keep = true;
+    if (!keep) {
+        TA1CCTL0 = 0;
+        // disable clock to save power?
+    }
+}
+
+static void gpioHandler(uint8_t id) {
+    if (timerActive[id])
+        return;
+    setTimer(id, ACLK_TICKS_PER_SECOND); // One second ahead
+}
+
 static void tickHandler(uint16_t clock) {
     uint8_t i;
 
     for (i = 0; i < 3; i++)
         if (timerActive[i] && timerPoint[i] == clock) {
-            uint32_t count = Hal_gpioCount(i);
+            uint32_t count = getCount(i);
+            uint16_t mask = BIT3 << i;
 
             if (count) {
-                ; // update timer; call jitter handler
+                setTimer(i, ACLK_TICKS_PER_SECOND); // One second ahead
+                if (appJitterHandler) (*appJitterHandler)(i, count);
             } else {
-                ; // clear timer; call app gpio handler
+                clearTimer(i);
+                if (GPIO_LOW(mask) && appGpioHandler) (*appGpioHandler)(i);
             }
         }
     // if all timers are unset, disable ticker.
@@ -141,13 +171,14 @@ static void postEvent(uint8_t handlerId) {
 
 /* -------- APP-HAL INTERFACE -------- */
 
-void Hal_gpioEnable(Hal_Handler handler) {
+void Hal_gpioEnable(Hal_Handler handler, void (*jhandler)(uint8_t id, uint32_t count)) {
     uint8_t id;
     uint16_t mask;
 
     for (id = 0, mask = BIT3; id < 3; id++, mask <<= 1) {
         handlerTab[id] = gpioHandler;
         appGpioHandler = handler;
+        appJitterHandler = jhandler;
         (P1DIR &= ~mask, P1REN |= mask, P1OUT |= mask, P1IES |= mask);
         Hal_delay(100);
         (P1IFG &= ~mask, P1IE |= mask);
@@ -297,14 +328,6 @@ void Hal_tickStop(void) {
     handlerTab[TICK_HANDLER_ID] = 0;
     TA1CCR0 = 0;
     TA1CCTL0 = 0;
-}
-
-uint32_t Hal_gpioCount(uint8_t id) {
-    DINT();
-    uint32_t count = gpioCount[id];
-    gpioCount[id] = 0;
-    EINT();
-    return count;
 }
 
 /* -------- SRT-HAL INTERFACE -------- */
