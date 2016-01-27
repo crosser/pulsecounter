@@ -1,7 +1,7 @@
 #include "Pulsecounter.h"
 #include "Hal.h"
 
-static void gpioHandler(uint8_t id);
+static void settleHandler(uint8_t id);
 static void jitterHandler(uint8_t id, uint32_t count);
 static int32_t cold = 0;
 static int32_t hot  = 0;
@@ -11,7 +11,7 @@ static bool connected = false;
 
 void main() {
     Hal_init();
-    Hal_gpioEnable(gpioHandler, jitterHandler);
+    Hal_gpioEnable(settleHandler, jitterHandler);
     Pulsecounter_setDeviceName("PULS-CNTR");
     Pulsecounter_start();
     Hal_idleLoop();
@@ -20,16 +20,16 @@ void main() {
 static void blink(uint8_t which, uint8_t count) {
     uint8_t i;
     for (i = 0; i < count; i++) {
-        if (i) Hal_delay(10);
+        if (i) Hal_delay(50);
         if (which & 1) Hal_greenLedOn();
         if (which & 2) Hal_redLedOn();
-        Hal_delay(10);
+        Hal_delay(50);
         if (which & 1) Hal_greenLedOff();
         if (which & 2) Hal_redLedOff();
     }
 }
 
-static void gpioHandler(uint8_t id) {
+static void settleHandler(uint8_t id) {
     switch (id) {
     case 0:
         /* Pulsecounter_accept(true); */
@@ -83,26 +83,12 @@ static void jitterHandler(uint8_t id, uint32_t count) {
 
 void Pulsecounter_connectHandler(void) {
     connected = true;
-    Hal_tickStop();
-    Hal_connected();
-    Hal_redLedOn();
-    Hal_delay(100);
-    Hal_redLedOff();
-    Hal_greenLedOn();
-    Hal_delay(100);
-    Hal_greenLedOff();
+    blink(1, 5);
 }
 
 void Pulsecounter_disconnectHandler(void) {
     connected = false;
-    Hal_greenLedOn();
-    Hal_delay(100);
-    Hal_greenLedOff();
-    Hal_redLedOn();
-    Hal_delay(100);
-    Hal_redLedOff();
-    /* Hal_tickStart(15000, tickHandler); */
-    Hal_disconnected();
+    blink(2, 5);
 }
 
 void Pulsecounter_coldTick_fetch(Pulsecounter_coldTick_t* const output) {
