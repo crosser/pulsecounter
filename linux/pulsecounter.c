@@ -96,12 +96,17 @@ static void events_handler(const uint8_t *pdu, uint16_t len, gpointer user_data)
 
 	handle = bt_get_le16(&pdu[1]);
 	which = pdu[3];
-	if ((pdu[0] == 0x1b) && (handle == 0x0012) && (len == 9) &&
-	    ((which == 1) || (which == 2))) {
+	if ((pdu[0] == 0x1b) && (handle == 0x0012) && (len == 9)) {
 		uint32_t val = bt_get_le32(&pdu[5]);
-		g_debug("store: \"%hhu,%u\"\n", which, val);
-		if (dbstore(which, val))
-			g_warning("error storing \"%hhu,%u\"\n", which, val);
+
+		if ((which == 1) || (which == 2)) {
+			g_debug("store: \"%hhu,%u\"\n", which, val);
+			if (dbstore(which, val))
+				g_warning("error storing \"%hhu,%u\"\n",
+						which, val);
+		} else {
+			g_debug("jitter: \"%hhu,%u\"\n", which, val);
+		}
 	} else {
 		time_t t;
 		int i;
