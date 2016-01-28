@@ -91,11 +91,11 @@ static void gpioHandler(uint8_t id);
 static void postEvent(uint8_t handlerId);
 
 static Hal_Handler appSettleHandler;
-static void (*appJitterHandler)(uint8_t id, uint16_t count);
+static void (*appJitterHandler)(uint8_t id, uint32_t count);
 static volatile uint16_t handlerEvents = 0;
 static uint16_t clockTick = 0;
 static Hal_Handler handlerTab[NUM_HANDLERS];
-static uint32_t gpioCount[3];
+static volatile uint32_t gpioCount[3] = {0};
 static bool timerActive[3] = {false, false, false};
 static uint16_t timerPoint[3];
 
