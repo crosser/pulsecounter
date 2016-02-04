@@ -193,14 +193,16 @@
   function drawplot(data, color) {
     var i;
 
-    ctx.beginPath();
-    ctx.moveTo(px(data[0][0]), py(data[0][1]));
-    for (i = 1; i < data.length; i++) {
-      ctx.lineTo(px(data[i][0]), py(data[i - 1][1]));
-      ctx.lineTo(px(data[i][0]), py(data[i][1]));
+    if (data.length) {
+      ctx.beginPath();
+      ctx.moveTo(px(data[0][0]), py(data[0][1]));
+      for (i = 1; i < data.length; i++) {
+        ctx.lineTo(px(data[i][0]), py(data[i - 1][1]));
+        ctx.lineTo(px(data[i][0]), py(data[i][1]));
+      }
+      ctx.strokeStyle = color;
+      ctx.stroke();
     }
-    ctx.strokeStyle = color;
-    ctx.stroke();
   }
 
   function showloading() {
