@@ -149,7 +149,7 @@ static void tickHandler(uint16_t clock) {
     uint8_t i;
 
     for (i = 0; i < 3; i++)
-        if (timerActive[i] && timerPoint[i] == clock) {
+        if (timerActive[i] && timerPoint[i] == clock) { /* FIXME */
             uint32_t count = getCount(i);
             uint16_t mask = BIT3 << i;
 
