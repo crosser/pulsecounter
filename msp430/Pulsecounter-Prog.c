@@ -15,6 +15,18 @@ void main() {
     Hal_idleLoop();
 }
 
+static void blink(uint8_t which, uint8_t count) {
+    uint8_t i;
+    for (i = 0; i < count; i++) {
+        if (i) Hal_delay(50);
+        if (which & 1) Hal_greenLedOn();
+        if (which & 2) Hal_redLedOn();
+        Hal_delay(50);
+        if (which & 1) Hal_greenLedOff();
+        if (which & 2) Hal_redLedOff();
+    }
+}
+
 static void gpioHandler(uint8_t id) {
     uint8_t i;
 
@@ -26,38 +38,23 @@ static void gpioHandler(uint8_t id) {
             Hal_delay(100);
             Pulsecounter_hotTick_indicate();
         }
-        Hal_greenLedOn();
-        Hal_redLedOn();
-        Hal_delay(10);
-        Hal_greenLedOff();
-        Hal_redLedOff();
+        blink(3, 2);
         Hal_tickStart(15000, tickHandler);
         break;
     case 1:
         cold++;
         if (connected)
             Pulsecounter_coldTick_indicate();
-        Hal_greenLedOn();
-        Hal_delay(10);
-        Hal_greenLedOff();
+        blink(1, 2);
         break;
     case 2:
         hot++;
         if (connected)
             Pulsecounter_hotTick_indicate();
-        Hal_redLedOn();
-        Hal_delay(10);
-        Hal_redLedOff();
+        blink(2, 2);
         break;
     default:
-        for (i = 0; i < 5; i++) {
-            Hal_greenLedOn();
-            Hal_redLedOn();
-            Hal_delay(10);
-            Hal_greenLedOff();
-            Hal_redLedOff();
-            Hal_delay(10);
-        }
+        blink(3, 15);
     }
 }
 
@@ -84,25 +81,14 @@ static void tickHandler(void) {
 void Pulsecounter_connectHandler(void) {
     connected = true;
     Hal_tickStop();
-    Hal_connected();
-    Hal_redLedOn();
-    Hal_delay(100);
-    Hal_redLedOff();
-    Hal_greenLedOn();
-    Hal_delay(100);
-    Hal_greenLedOff();
+    blink(1, 5);
 }
 
 void Pulsecounter_disconnectHandler(void) {
     connected = false;
-    Hal_greenLedOn();
-    Hal_delay(100);
-    Hal_greenLedOff();
-    Hal_redLedOn();
-    Hal_delay(100);
-    Hal_redLedOff();
     /* Hal_tickStart(15000, tickHandler); */
     Hal_disconnected();
+    blink(2, 5);
 }
 
 void Pulsecounter_coldTick_fetch(Pulsecounter_coldTick_t* const output) {
