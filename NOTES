@@ -235,3 +235,21 @@ selected eight lines are bogus. Mechanical counter reading is less by
 eight than counted by the software. Apparently triggered by high flow
 of hot water (still definitely not 500 l/min high!).
 
+2016-02-05:
+Created a binary that counts interrupts (and sometimes misses real events)
+in the branch 'countjitter'. There is no jitter, actually. Bogus events
+where apparently caused by conductive moist on the PCB. They stopped after
+the device was enclosed in a plastic box. Before that, they coninsided
+with strong flow of hot water that caused high humidity in the room.
+Switched back to 'master' branch.
+
+Considering fully autonomous sensor based on cc3200. I want to put the
+device in 'hybernation' mode but that requires saving of the state in
+the SPI flash. That is only possible by writing a whole file every time
+(i.e. up to ~100 times a day). Ugly. But apparently there is no other
+way, as long as I want to keep real time clock running. I think that I
+have to, for the thing to work properly. Alternative is keeping the
+device in LPDS mode, but that consumes almost 300 uA just in standby,
+leaving me with no budget for active operations. Their filesystem has
+no wear levelling, and no way to append to a preexisting file, I'll have
+to rewrite the whole of it every time I go to hybernate.
